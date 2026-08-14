@@ -1,0 +1,7 @@
+interface:
+  display_name: "水木青绿 · Shuimu Qinglv PPT"
+  short_description: "Create presentations with the 水木青绿 · Shuimu Qinglv PPT template"
+  icon_large: "./assets/preview.png"
+  default_prompt: "Use $artifact-template-shuimu-qinglv-ppt to create a new presentation with this template."
+policy:
+  allow_implicit_invocation: true

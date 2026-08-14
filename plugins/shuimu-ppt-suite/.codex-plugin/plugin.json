@@ -1,0 +1,31 @@
+{
+  "name": "shuimu-ppt-suite",
+  "version": "0.1.0",
+  "description": "\u6c34\u6728 PPT \u5de5\u4f5c\u6d41\u5957\u4ef6\uff1a\u7edf\u4e00\u8def\u7531 AIHIA \u56fe\u7247\u6df7\u5408\u7248\u3001\u6c34\u6728\u9752\u7eff\u539f\u751f\u7248\u3001\u6e05\u534e\u957f\u5e9a\u6807\u9898\u680f\u56fe\u7247\u6df7\u5408\u7248\u3001\u6c34\u6728\u533b\u84dd\u3001\u84dd\u6a59\u5757\u72b6\u56fe\u7247\u7248\u548c\u901a\u7528\u56fe\u7247\u7248\u3002",
+  "author": {
+    "name": "doouu",
+    "url": "https://github.com/doouuyu"
+  },
+  "homepage": "https://github.com/doouuyu/shuimu-ppt-marketplace",
+  "repository": "https://github.com/doouuyu/shuimu-ppt-marketplace",
+  "keywords": [
+    "presentation",
+    "ppt",
+    "medical",
+    "template"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "\u6c34\u6728 PPT \u5957\u4ef6 \u00b7 Shuimu PPT Suite",
+    "shortDescription": "\u7edf\u4e00\u9009\u62e9\u5e76\u8c03\u7528\u516d\u79cd\u6c34\u6728 PPT \u5de5\u4f5c\u6d41\u3002",
+    "longDescription": "\u901a\u8fc7 $shuimu-ppt \u7edf\u4e00\u8def\u7531 AIHIA \u539f\u751f\u5c01\u9762\u4e0e\u6807\u9898\u680f\u56fe\u7247\u6df7\u5408\u7248\u3001\u6c34\u6728\u9752\u7eff\u539f\u751f\u53ef\u7f16\u8f91\u7248\u3001\u6c34\u6728\u9752\u7eff\u56fe\u7247\u6df7\u5408\u7248\u3001\u6c34\u6728\u533b\u84dd\u3001\u84dd\u6a59\u5757\u72b6\u56fe\u7247\u7248\u53ca\u901a\u7528\u6574\u9875\u56fe\u7247 PPT\uff1b\u4e5f\u53ef\u76f4\u63a5\u8c03\u7528\u4efb\u4e00\u5de5\u4f5c Skill\u3002",
+    "developerName": "doouu",
+    "category": "Productivity",
+    "capabilities": [
+      "presentation-generation",
+      "image-generation",
+      "template-routing"
+    ],
+    "defaultPrompt": "\u4f7f\u7528 $shuimu-ppt \u6839\u636e\u6211\u7684\u5185\u5bb9\u3001\u7f16\u8f91\u6027\u548c\u6807\u9898\u680f\u8981\u6c42\u9009\u62e9\u6b63\u786e\u7684\u6c34\u6728 PPT \u5de5\u4f5c\u6d41\u3002"
+  }
+}

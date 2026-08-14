@@ -1,0 +1,5 @@
+interface:
+  display_name: "AIHIA 图片混合 PPT"
+  short_description: "使用原生 AIHIA 封面和标题栏生成图片混合版 PPT"
+  brand_color: "#694CD5"
+  default_prompt: "使用 $aihia 根据我的内容生成带原生 AIHIA 封面与标题栏的图片混合版 PPT。"
