@@ -1,0 +1,45 @@
+{
+  "workflow": "editable-ppt",
+  "canvas": {"width": 1280, "height": 720, "unit": "px"},
+  "assets": [],
+  "slides": [
+    {
+      "id": "P01",
+      "role": "content",
+      "background": "#FFFFFF",
+      "notes": "结构示例，字体在生成时按实际可用字体替换。",
+      "elements": [
+        {
+          "id": "P01-title", "type": "text", "box": [48, 32, 1184, 76], "z": 2,
+          "text": "可编辑对象与修改方式", "font_family": "Microsoft YaHei", "font_size_pt": 32,
+          "bold": true, "color": "#10367D", "align": "left", "valign": "middle",
+          "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0,
+          "max_lines": 1
+        },
+        {
+          "id": "P01-summary", "type": "text", "box": [48, 122, 1184, 52], "z": 2,
+          "text": "文字与数据通过原生对象编辑，图片按需替换。",
+          "font_family": "Microsoft YaHei", "font_size_pt": 22,
+          "bold": false, "color": "#20262E", "align": "left", "valign": "top",
+          "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
+        },
+        {
+          "id": "P01-table", "type": "table", "box": [48, 212, 1184, 320], "z": 2,
+          "font_family": "Microsoft YaHei", "font_size_pt": 20,
+          "rows": [["对象", "原生类型", "修改方式"], ["标题与正文", "文本框", "修改文字"], ["表格与图表", "表格或图表", "修改数据"], ["照片与插图", "图片素材", "替换文件"]],
+          "column_widths": [320, 384, 480], "row_heights": [80, 80, 80, 80],
+          "header_fill": "#10367D", "header_color": "#FFFFFF",
+          "alternate_fill": "#EAF2FA", "body_color": "#20262E",
+          "column_align": ["left", "left", "left"], "cell_margin_px": [12, 18, 12, 18]
+        },
+        {
+          "id": "P01-note", "type": "text", "box": [48, 578, 1184, 64], "z": 2,
+          "text": "照片、插图和截图内部仍为位图。",
+          "font_family": "Microsoft YaHei", "font_size_pt": 18,
+          "bold": false, "color": "#5A6878", "align": "left", "valign": "top",
+          "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
+        }
+      ]
+    }
+  ]
+}

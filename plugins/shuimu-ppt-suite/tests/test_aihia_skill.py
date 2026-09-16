@@ -55,9 +55,9 @@ class AihiaSkillContractTest(unittest.TestCase):
         text = (PLUGIN_ROOT / "skills" / "shuimu-ppt" / "SKILL.md").read_text(encoding="utf-8")
         self.assertLess(text.index("$aihia"), text.index("$ppt-image-deck"))
 
-    def test_plugin_manifest_lists_six_workflows(self):
+    def test_plugin_manifest_lists_nine_workflows(self):
         manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
-        self.assertIn("六种水木 PPT 工作流", manifest["interface"]["shortDescription"])
+        self.assertIn("九种水木 PPT 工作流", manifest["interface"]["shortDescription"])
 
 
 if __name__ == "__main__":

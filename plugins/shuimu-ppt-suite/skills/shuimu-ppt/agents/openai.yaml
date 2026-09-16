@@ -1,6 +1,6 @@
 interface:
   display_name: "水木 PPT 套件"
-  short_description: "统一选择 AIHIA、水木青绿、医蓝、蓝橙块状及通用图片版 PPT 工作流"
+  short_description: "统一选择可编辑流程、AIHIA、长庚蓝、像素答辩、青绿、医蓝及蓝橙图片版"
   brand_color: "#3A8F96"
   default_prompt: "使用 $shuimu-ppt 根据我的内容、编辑性和标题栏要求选择正确的水木 PPT 工作流。"
 policy:

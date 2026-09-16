@@ -1,0 +1,4 @@
+interface:
+  display_name: "像素答辩学术汇报风"
+  short_description: "白底、编号标题条与高密度科研信息的答辩图片版 PPT"
+  default_prompt: "使用 $pixel-defense-academic-ppt 根据我的材料生成像素答辩学术汇报风图片版 PPT。"

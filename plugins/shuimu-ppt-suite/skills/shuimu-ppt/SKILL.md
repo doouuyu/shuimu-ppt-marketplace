@@ -1,11 +1,18 @@
 ---
 name: shuimu-ppt
-description: Route a presentation request to the correct workflow in the 水木 PPT 套件. Use when the user explicitly invokes $shuimu-ppt, asks to use the 水木 PPT 套件, asks Codex to choose among $aihia、水木青绿、水木青绿图片版、水木医蓝、$ppt-image-blue-orange-blocks and $ppt-image-deck, or gives a presentation request without knowing which bundled workflow fits. Do not replace a worker skill that the user explicitly invokes.
+description: Route a presentation request to the correct workflow in the 水木 PPT 套件. Use when the user explicitly invokes $shuimu-ppt, asks to use the 水木 PPT 套件, asks Codex to choose among $editable-ppt、$aihia、$qinghua-changgung-blue-realistic-tech、$pixel-defense-academic-ppt、水木青绿、水木青绿图片版、水木医蓝、$ppt-image-blue-orange-blocks and $ppt-image-deck, or gives a presentation request without knowing which bundled workflow fits. Do not replace a worker skill that the user explicitly invokes.
 ---
 
 # 水木 PPT 套件路由
 
 本 Skill 只负责选择并交接给正确的工作 Skill，不自行生成幻灯片，也不混合不同工作流的规则。
+
+## 可编辑流程独立入口
+
+用户明确调用 `$editable-ppt` 或选择“可编辑 PPT 风格/可编辑PPT流程”，或明确要求“逐页设计 → 素材设计 + 详细排版设计 → 原生文字图形组装”时，选择 `../editable-ppt/SKILL.md`。
+
+用户同时指定该流程和某种视觉外观时，以可编辑流程执行，只借用指定外观的视觉规范，不同时执行图片版流程。
+仅说“可编辑”时，保留已明确选用的水木青绿原生模板等原有路由；没有指定本流程时，不自动迁移旧图片版风格。
 
 ## 路由原则
 
@@ -13,12 +20,14 @@ description: Route a presentation request to the correct workflow in the 水木 
 
 1. 用户显式写出某个工作 Skill 名称时，直接选择该 Skill。
 2. 用户明确要求“AIHIA”“华医智锦模板”“AIHIA 标题栏/封面”，或显式调用 `$aihia` 时，选择该 Skill。
-3. 用户明确要求“清华长庚标题栏”“北京清华长庚医院标题栏”“清华长庚标题 + Logo + 底色”“水木青绿图片版”时，选择 `$artifact-template-shuimu-qinglv-image-ppt`。
-4. 用户明确要求“水木青绿”“清华长庚模板”，并要求原生对象、完整可编辑、沿用原模板版式时，选择 `$artifact-template-shuimu-qinglv-ppt`。
-5. 用户明确要求“水木医蓝”，或选择深海军蓝、医疗蓝、数智医疗、科技光线风格时，选择 `$artifact-template-shuimu-yilan-ppt`。
-6. 用户明确要求“蓝橙块状图片版”“白底蓝色为主、橙色点缀”“少图标、多色块”，或显式调用 `$ppt-image-blue-orange-blocks` 时，选择该 Skill。
-7. 用户要求整页图片 PPT、提供自定义风格文档或参考图，但没有点名上述模板、AIHIA、蓝橙块状风格与清华长庚标题栏时，选择 `$ppt-image-deck`。
-8. 只有在“水木青绿”请求无法判断要全页可编辑还是图片主体加原生标题栏时，询问一次：需要“原生对象完整可编辑”，还是“图片主体 + 清华长庚原生标题栏”？
+3. 用户明确要求“清华长庚蓝写实科技风”“清华长庚蓝写实风”“清华长庚蓝科技图片版”，或显式调用 `$qinghua-changgung-blue-realistic-tech` 时，选择该 Skill。
+4. 用户明确要求“像素答辩学术汇报风”“像素答辩风”“高密度科研答辩图片版”，或显式调用 `$pixel-defense-academic-ppt` 时，选择该 Skill。
+5. 用户明确要求“清华长庚标题栏”“北京清华长庚医院标题栏”“清华长庚标题 + Logo + 底色”“水木青绿图片版”时，选择 `$artifact-template-shuimu-qinglv-image-ppt`。
+6. 用户明确要求“水木青绿”“清华长庚模板”，并要求原生对象、完整可编辑、沿用原模板版式时，选择 `$artifact-template-shuimu-qinglv-ppt`。
+7. 用户明确要求“水木医蓝”，或选择深海军蓝、医疗蓝、数智医疗、科技光线风格时，选择 `$artifact-template-shuimu-yilan-ppt`。
+8. 用户明确要求“蓝橙块状图片版”“白底蓝色为主、橙色点缀”“少图标、多色块”，或显式调用 `$ppt-image-blue-orange-blocks` 时，选择该 Skill。
+9. 用户要求整页图片 PPT、提供自定义风格文档或参考图，但没有点名上述模板、AIHIA、清华长庚蓝写实科技风、像素答辩学术汇报风、蓝橙块状风格与清华长庚标题栏时，选择 `$ppt-image-deck`。
+10. 只有在“水木青绿”请求无法判断要全页可编辑还是图片主体加原生标题栏时，询问一次：需要“原生对象完整可编辑”，还是“图片主体 + 清华长庚原生标题栏”？
 
 ## 严格门槛
 
@@ -29,11 +38,22 @@ description: Route a presentation request to the correct workflow in the 水木 
 不得仅因内容涉及 AI、医院、医疗科技或紫色风格，就选择 `$aihia`；必须明确点名 AIHIA、华医智锦
 模板、AIHIA 原生标题栏/封面或该 Skill 名称。
 
+不得仅因内容涉及医院、蓝色、写实照片、软件界面或科技风，就选择
+`$qinghua-changgung-blue-realistic-tech`；必须明确点名“清华长庚蓝写实科技风”或其约定别名，或显式
+调用该 Skill。仅要求“水木医蓝”时仍使用 `$artifact-template-shuimu-yilan-ppt`；仅要求清华长庚原生
+标题栏时仍使用 `$artifact-template-shuimu-qinglv-image-ppt`。
+
+不得仅因内容是学术、科研、答辩、课题申报或使用蓝色，就选择 `$pixel-defense-academic-ppt`；必须明确
+点名“像素答辩学术汇报风”“像素答辩风”“高密度科研答辩图片版”或显式调用该 Skill。
+
 ## 交接流程
 
 1. 用一句话告知用户已选择的工作流及原因。
 2. 完整读取所选目录中的 `SKILL.md`：
+   - `../editable-ppt/SKILL.md`
    - `../aihia/SKILL.md`
+   - `../qinghua-changgung-blue-realistic-tech/SKILL.md`
+   - `../pixel-defense-academic-ppt/SKILL.md`
    - `../artifact-template-shuimu-qinglv-ppt/SKILL.md`
    - `../artifact-template-shuimu-qinglv-image-ppt/SKILL.md`
    - `../artifact-template-shuimu-yilan-ppt/SKILL.md`
@@ -44,8 +64,13 @@ description: Route a presentation request to the correct workflow in the 水木 
 
 ## 快速判断示例
 
+- “用可编辑 PPT 风格，先写素材设计和排版设计，再生成 PPT” → `$editable-ppt`
+- “用可编辑 PPT 风格，外观参考清华长庚蓝，文字不要放进图片” → `$editable-ppt`，仅借用长庚蓝视觉规范
+
 - “用水木青绿做一份可编辑的科室汇报” → `$artifact-template-shuimu-qinglv-ppt`
 - “用 AIHIA 原生封面和标题栏做一套图片版汇报” → `$aihia`
+- “用清华长庚蓝写实科技风做一套医院数字化图片版汇报” → `$qinghua-changgung-blue-realistic-tech`
+- “用像素答辩学术汇报风做一套项目申报图片版 PPT” → `$pixel-defense-academic-ppt`
 - “正文用 image_gen，但要叠加清华长庚标题、Logo 和青绿色底栏” → `$artifact-template-shuimu-qinglv-image-ppt`
 - “用水木医蓝做数智医疗项目汇报” → `$artifact-template-shuimu-yilan-ppt`
 - “白底，蓝色为主橙色点缀，少图标多色块，做成图片版 PPT” → `$ppt-image-blue-orange-blocks`
