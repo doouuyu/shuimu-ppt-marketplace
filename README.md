@@ -2,7 +2,7 @@
 
 面向 ChatGPT 和 Codex 的水木 PPT 工作流插件。插件包含模板路由、原生可编辑模板、标题栏混合图片版和整页图片版等九种 PPT 工作流。
 
-当前插件版本：`0.1.0+codex.20260916034630`。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
+当前插件版本：`0.1.0+codex.20260917022843`。更新内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 安装
 
@@ -46,6 +46,10 @@ codex plugin add shuimu-ppt-suite@shuimu-ppt-marketplace
 
 “可编辑 PPT 风格”需要 Presentations 提供的 `@oai/artifact-tool` 演示文稿运行时。其流程为：Markdown 内容 → 逐页设计 → 素材设计文档 + 详细排版设计文档 → 独立素材 → 原生文字、图形、表格与图表组装。缺少运行时不能承诺完成最终 PPTX；不能用整页图片冒充可编辑内容。
 
+指定 AIHIA、水木青绿等原生模板时，该流程复用模板原封面、章节过渡、标题栏、主题与结束页；仅有图片参考的风格按参考构图做可编辑重建，不声称具有原生模板结构。正文组装前必须生成并验收无字装饰素材，不支持跳过生图。默认采用疏朗柔和的专业排版，只有明确选择像素答辩时使用该风格。
+
+正式页面不留“待补充/演示数据”等占位痕迹；缺少依据的数据省略或改定性表达，不编造临时数据冒充事实。缺项另列在独立审查文档中。
+
 ## 仓库结构
 
 ```text
@@ -66,12 +70,13 @@ codex plugin add shuimu-ppt-suite@shuimu-ppt-marketplace
 codex plugin list
 ```
 
-在插件列表中确认 `shuimu-ppt-suite` 已安装。本次预期版本为 `0.1.0+codex.20260916034630`。更新后请新建任务；若桌面应用仍显示旧版，可重启应用后再新建任务。
+在插件列表中确认 `shuimu-ppt-suite` 已安装。本次预期版本为 `0.1.0+codex.20260917022843`。更新后请新建任务；若桌面应用仍显示旧版，可重启应用后再新建任务。
 
 可在新任务中输入：
 
 ```text
-使用 $editable-ppt 制作可编辑 PPT，先输出逐页设计、素材设计和详细排版设计。
+使用 $editable-ppt，套用 AIHIA 原模板封面、章节过渡和标题栏。
+先输出逐页设计、素材设计和详细排版设计，再生成无字装饰素材并组装可编辑 PPT。
 ```
 
 如果提示找不到市场，先执行安装章节中的 `codex plugin marketplace add doouuyu/shuimu-ppt-marketplace`，再安装插件。如果上述命令不受支持，请先更新 Codex CLI。

@@ -1,5 +1,6 @@
 """Validate explicit layout plans and audit named native PPTX objects (stdlib only)."""
 import argparse
+import hashlib
 import json
 import math
 import posixpath
@@ -15,10 +16,137 @@ NS = {
     'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
 }
 TYPES = {'text', 'image', 'shape', 'connector', 'table', 'chart'}
+PLACEHOLDERS = re.compile(
+    r'待补充|待完善|待替换|数据待确认|(?:示例|演示|示意|临时)数据|占位(?:图|符|文字)|'
+    r'请输入(?:标题|正文|内容)|此处输入|输入修改文字|添加标题文本|'
+    r'您的内容打在这里|在这里输入你的|单击此处|某某某|XXX|\b(?:TBD|TODO|LOREM IPSUM)\b', re.I)
+NATIVE_PROFILES = {
+    'aihia': ('aihia', {'cover': [1], 'toc': [3], 'section': [4],
+                        'content': [6], 'ending': [14]}),
+    'shuimu-qinglv': ('artifact-template-shuimu-qinglv-ppt', {
+        'cover': [1], 'toc': [2], 'section': [3, 6, 9],
+        'content': [4, 5, 7, 8, 10, 11], 'ending': [12]}),
+}
+
+
+def text_values(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from text_values(item)
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from text_values(item)
+
+
+def check_style(plan, base):
+    errors = []
+    style = plan.get('style', {})
+    profile, kind = style.get('id'), style.get('reference_kind')
+    if not profile or kind not in ('none', 'native-template', 'image-reference'):
+        return ['style 必须锁定 id 与 reference_kind']
+    if profile == 'pixel-defense-academic-ppt' and style.get('explicitly_requested') is not True:
+        errors.append('像素答辩只允许用户明确选择，不能作为可编辑流程默认风格')
+    if profile in NATIVE_PROFILES and kind != 'native-template':
+        errors.append(f'{profile}: 必须复用原生模板，不能降级为仅借用配色')
+    if kind == 'none' and profile not in ('neutral', 'custom'):
+        errors.append(f'{profile}: 指定风格必须关联实际参考文件')
+    if kind == 'none':
+        return errors
+    reference = base / style.get('reference_path', '')
+    if not reference.is_file():
+        return errors + ['style.reference_path 必须指向实际参考文件']
+    if profile in NATIVE_PROFILES:
+        folder, roles = NATIVE_PROFILES[profile]
+        original = Path(__file__).resolve().parents[2] / folder / 'assets/reference.pptx'
+        if hashlib.sha256(reference.read_bytes()).digest() != hashlib.sha256(original.read_bytes()).digest():
+            errors.append(f'{profile}: reference_path 与套件保留原模板不一致')
+    else:
+        roles = None
+    for slide in plan.get('slides', []):
+        sid = slide.get('id')
+        source = slide.get('template_source', {})
+        if kind == 'image-reference':
+            if not slide.get('reference_anchor'):
+                errors.append(f'{sid}: 图片参考必须记录 reference_anchor，不能假称复制原生模板')
+            continue
+        page, mode = source.get('slide'), source.get('mode')
+        if not isinstance(page, int) or isinstance(page, bool) or page < 1:
+            errors.append(f'{sid}: 缺少 template_source.slide 原模板页码')
+        if roles and page not in roles.get(slide.get('role'), []):
+            errors.append(f'{sid}: 源页不符合 {profile} 的 {slide.get("role")} 页面角色')
+        allowed = ('duplicate-slide', 'reuse-header') if slide.get('role') == 'content' else ('duplicate-slide',)
+        if mode not in allowed:
+            errors.append(f'{sid}: 封面/目录/章节/结束页必须 duplicate-slide，正文可 reuse-header')
+        required = {'theme', 'layout', 'background', 'logo', 'title-style'}
+        if not required.issubset(set(source.get('preserve', []))):
+            errors.append(f'{sid}: template_source.preserve 缺少模板保护项')
+    return errors
+
+
+def check_delivery(plan, base, require_assets):
+    errors = check_style(plan, base)
+    generated = set()
+    for asset in plan.get('assets', []):
+        if asset.get('source') != 'generated':
+            continue
+        aid = asset.get('id')
+        if asset.get('purpose') == 'decorative':
+            generated.add(aid)
+        if not asset.get('prompt') or asset.get('status') not in ('planned', 'generated', 'accepted'):
+            errors.append(f'{aid}: 生成素材必须记录 prompt 与 status')
+        if require_assets:
+            if asset.get('status') != 'accepted':
+                errors.append(f'{aid}: 素材尚未验收，不能进入组装')
+            if not all(number(asset.get(k)) and asset[k] > 0 for k in ('width_px', 'height_px')):
+                errors.append(f'{aid}: 缺少实际像素尺寸')
+            path = base / asset.get('path', '')
+            if path.is_file():
+                with path.open('rb') as handle:
+                    header = handle.read(32)
+                valid = header.startswith(b'\x89PNG\r\n\x1a\n') or header.startswith(b'\xff\xd8\xff') or (header[:4] == b'RIFF' and header[8:12] == b'WEBP')
+                if not valid:
+                    errors.append(f'{aid}: 生成素材不是 PNG/JPEG/WebP 图片文件')
+    used = set()
+    for slide in plan.get('slides', []):
+        images = [e for e in slide.get('elements', []) if e.get('type') == 'image']
+        used.update(e.get('asset_id') for e in images)
+        if slide.get('role') == 'content' and not images:
+            errors.append(f'{slide.get("id")}: 正文页必须设计并放置图片素材，不能全用文字方块')
+        for element in slide.get('elements', []):
+            eid = element.get('id')
+            for field in ('text', 'runs', 'rows', 'categories', 'series', 'title', 'labels'):
+                if any(PLACEHOLDERS.search(t) for t in text_values(element.get(field))):
+                    errors.append(f'{eid}: 正式页面含占位/演示文字，缺项应省略并记录到独立审查文档')
+            if element.get('data_status') in ('temporary', 'mock', 'synthetic', 'unverified'):
+                errors.append(f'{eid}: 未核实/临时数据不能进入对外版本')
+            if element.get('type') == 'chart' and not element.get('source_ref'):
+                errors.append(f'{eid}: 图表必须提供 source_ref，缺数据时删除图表或改定性表达')
+            if element.get('type') == 'shape':
+                purpose = element.get('purpose')
+                if purpose not in ('template', 'background', 'separator', 'diagram', 'content-panel'):
+                    errors.append(f'{eid}: shape 必须声明用途，不能把程序图形当装饰素材')
+                if purpose == 'content-panel' and element.get('geometry') == 'rect' and plan.get('style', {}).get('id') != 'pixel-defense-academic-ppt':
+                    errors.append(f'{eid}: 非像素答辩风不用直角内容方块，优先开放布局或克制圆角')
+                if purpose == 'template' and not slide.get('template_source'):
+                    errors.append(f'{eid}: 声称继承模板对象却没有 template_source')
+    if not (generated & used):
+        errors.append('必须先生成并实际使用至少一项装饰图片素材，不允许跳过素材生成')
+    return errors
 
 
 def number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def retained_template_bleed(element, slide, width, height):
+    """Declared source-object bleed still requires comparison with the rendered template."""
+    if not (element.get('template_bleed') is True and element.get('source_object')
+            and slide.get('template_source', {}).get('mode') in ('duplicate-slide', 'reuse-header')):
+        return False
+    x, y, w, h = element['box']
+    return w > 0 and h > 0 and x < width and y < height and x + w > 0 and y + h > 0
 
 
 def validate_plan(plan, base, require_assets=False):
@@ -65,7 +193,7 @@ def validate_plan(plan, base, require_assets=False):
             box = element.get('box', [])
             if not isinstance(box, list) or len(box) != 4 or not all(number(v) for v in box):
                 errors.append(f'{eid}: box 必须是 [x,y,w,h] 四个有限数值')
-            elif box[0] < 0 or box[1] < 0 or min(box[2:]) <= 0 or box[0] + box[2] > width + .01 or box[1] + box[3] > height + .01:
+            elif (box[0] < 0 or box[1] < 0 or min(box[2:]) <= 0 or box[0] + box[2] > width + .01 or box[1] + box[3] > height + .01) and not retained_template_bleed(element, slide, width, height):
                 errors.append(f'{eid}: box 越界或尺寸非正')
             if not number(element.get('z')):
                 errors.append(f'{eid}: 缺少有效 z 层级')
@@ -120,6 +248,7 @@ def validate_plan(plan, base, require_assets=False):
         for e in elements:
             if e.get('type') == 'connector' and any(e.get(k) not in local_ids for k in ('from', 'to')):
                 errors.append(f'{e.get("id")}: 连接端点必须存在于同页')
+    errors.extend(check_delivery(plan, base, require_assets))
     return errors
 
 
@@ -142,6 +271,9 @@ def audit_pptx(plan, pptx):
             errors.append(f'页数不符：PPTX={len(slide_paths)}，设计={len(plan["slides"])}')
         for slide, path in zip(plan['slides'], slide_paths):
             root = ET.fromstring(archive.read(path))
+            actual_copy = ''.join(n.text or '' for n in root.findall('.//a:t', NS))
+            if PLACEHOLDERS.search(actual_copy):
+                errors.append(f'{slide["id"]}: PPTX 残留占位/演示文字（包括未列入设计的模板对象）')
             objects = {}
             for tag in ('sp', 'pic', 'graphicFrame', 'cxnSp'):
                 for obj in root.findall(f'.//p:{tag}', NS):

@@ -1,4 +1,4 @@
 interface:
   display_name: "可编辑 PPT 风格"
-  short_description: "逐页设计拆分素材与精确排版，生成文字图表可编辑的原生 PPT"
-  default_prompt: "使用 $editable-ppt，根据我的 Markdown 材料产出逐页设计、素材设计和详细排版设计，再生成可编辑 PPT。"
+  short_description: "锁定指定模板原页，先生成装饰素材，再按详细排版组装原生可编辑 PPT"
+  default_prompt: "使用 $editable-ppt，复用我指定模板的封面、过渡页与标题栏，先完成逐页设计、素材设计和详细排版，再生成无字装饰素材并组装可编辑 PPT；正式页面不留占位内容。"

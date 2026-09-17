@@ -12,13 +12,24 @@ SCRIPT = ROOT / 'skills/editable-ppt/scripts/validate_deck.py'
 def minimal_plan():
     return {
         'workflow': 'editable-ppt', 'canvas': {'width': 1280, 'height': 720, 'unit': 'px'},
-        'assets': [], 'slides': [{'id': 'P01', 'role': 'content', 'elements': [{
+        'style': {'id': 'neutral', 'reference_kind': 'none', 'explicitly_requested': False},
+        'assets': [{'id': 'A01', 'path': 'a.png', 'kind': 'decoration', 'source': 'generated',
+                    'purpose': 'decorative', 'text_free': True, 'prompt': '无字柔和波纹', 'status': 'planned'}],
+        'slides': [{'id': 'P01', 'role': 'content', 'elements': [{
             'id': 'P01-title', 'type': 'text', 'box': [48, 32, 1150, 72], 'z': 2,
             'text': '可编辑标题', 'font_family': 'Arial', 'font_size_pt': 32,
             'bold': True, 'color': '#10367D', 'align': 'left', 'valign': 'middle',
             'margin_px': [0, 0, 0, 0], 'line_spacing': 1.15, 'paragraph_after_pt': 0,
-        }]}],
+        }, {'id': 'P01-art', 'type': 'image', 'box': [880, 300, 300, 250], 'z': 1,
+            'asset_id': 'A01', 'fit': 'contain'}]}],
     }
+
+
+def text_audit_plan():
+    """Isolate native text auditing; delivery preflight is tested separately."""
+    plan = minimal_plan()
+    plan['slides'][0]['elements'] = plan['slides'][0]['elements'][:1]
+    return plan
 
 
 class EditableWorkflowTest(unittest.TestCase):
@@ -49,8 +60,7 @@ class EditableWorkflowTest(unittest.TestCase):
 
     def test_rejects_missing_asset_file(self):
         plan = minimal_plan()
-        plan['assets'] = [{'id': 'A01', 'path': 'never-exists.png', 'kind': 'illustration',
-                           'source': 'generated', 'text_free': True}]
+        plan['assets'][0]['path'] = 'never-exists.png'
         plan['slides'][0]['elements'].append({'id': 'P01-img', 'type': 'image', 'box': [50, 150, 400, 300],
                                               'z': 1, 'asset_id': 'A01', 'fit': 'contain'})
         self.assertTrue(self.check.validate_plan(plan, Path('.'), require_assets=True))
@@ -96,18 +106,18 @@ class EditableWorkflowTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'test.pptx'
             self.make_package(path, '<p:pic><p:nvPicPr><p:cNvPr id="2" name="P01-title"/></p:nvPicPr></p:pic>')
-            self.assertTrue(self.check.audit_pptx(minimal_plan(), path))
+            self.assertTrue(self.check.audit_pptx(text_audit_plan(), path))
 
     def test_pptx_text_matches_and_is_not_hidden(self):
         body = '<p:sp><p:nvSpPr><p:cNvPr id="2" name="P01-title"/></p:nvSpPr><p:txBody><a:p><a:r><a:t>可编辑标题</a:t></a:r></a:p></p:txBody></p:sp>'
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'test.pptx'
             self.make_package(path, body)
-            self.assertEqual([], self.check.audit_pptx(minimal_plan(), path))
+            self.assertEqual([], self.check.audit_pptx(text_audit_plan(), path))
             self.make_package(path, body.replace('name="P01-title"', 'name="P01-title" hidden="1"'))
-            self.assertTrue(self.check.audit_pptx(minimal_plan(), path))
+            self.assertTrue(self.check.audit_pptx(text_audit_plan(), path))
             self.make_package(path, body.replace('可编辑标题', '另一份标题'))
-            self.assertTrue(self.check.audit_pptx(minimal_plan(), path))
+            self.assertTrue(self.check.audit_pptx(text_audit_plan(), path))
 
 
 if __name__ == '__main__':

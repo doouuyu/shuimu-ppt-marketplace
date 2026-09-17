@@ -11,7 +11,9 @@ description: Route a presentation request to the correct workflow in the 水木 
 
 用户明确调用 `$editable-ppt` 或选择“可编辑 PPT 风格/可编辑PPT流程”，或明确要求“逐页设计 → 素材设计 + 详细排版设计 → 原生文字图形组装”时，选择 `../editable-ppt/SKILL.md`。
 
-用户同时指定该流程和某种视觉外观时，以可编辑流程执行，只借用指定外观的视觉规范，不同时执行图片版流程。
+用户同时指定该流程和某种模板/视觉外观时，以可编辑流程执行，并按其 template-binding 规则绑定实际
+参考文件。有原生模板必须复用封面、目录、章节过渡、标题栏、主题和结束页，不能只借用配色。
+仅有图片参考则匹配参考构图并保留原生文字，不假称复制原生模板；不同时执行图片版流程。
 仅说“可编辑”时，保留已明确选用的水木青绿原生模板等原有路由；没有指定本流程时，不自动迁移旧图片版风格。
 
 ## 路由原则
@@ -65,7 +67,8 @@ description: Route a presentation request to the correct workflow in the 水木 
 ## 快速判断示例
 
 - “用可编辑 PPT 风格，先写素材设计和排版设计，再生成 PPT” → `$editable-ppt`
-- “用可编辑 PPT 风格，外观参考清华长庚蓝，文字不要放进图片” → `$editable-ppt`，仅借用长庚蓝视觉规范
+- “用可编辑 PPT 风格，外观参考清华长庚蓝，文字不要放进图片” → `$editable-ppt`，先确定具体蓝色参考，再绑定源页/图区域与生成无字装饰素材
+- “用可编辑 PPT 风格，套用 AIHIA 模板” → `$editable-ppt`，复用 AIHIA 原生封面 1、章节 4、标题栏 6、结束 14，正文原生组装
 
 - “用水木青绿做一份可编辑的科室汇报” → `$artifact-template-shuimu-qinglv-ppt`
 - “用 AIHIA 原生封面和标题栏做一套图片版汇报” → `$aihia`

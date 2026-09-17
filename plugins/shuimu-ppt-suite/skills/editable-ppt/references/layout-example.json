@@ -1,7 +1,12 @@
 {
   "workflow": "editable-ppt",
   "canvas": {"width": 1280, "height": 720, "unit": "px"},
-  "assets": [],
+  "style": {"id": "neutral", "reference_kind": "none", "explicitly_requested": false},
+  "assets": [{
+    "id": "A001", "path": "../assets/A001.png", "kind": "decoration",
+    "source": "generated", "purpose": "decorative", "text_free": true, "status": "planned",
+    "prompt": "生成无字柔和蓝色数据波纹装饰，横向2:1，主体居右，白底，大量留白。无数字、字母、Logo或图表，不生成幻灯片。"
+  }],
   "slides": [
     {
       "id": "P01",
@@ -33,11 +38,15 @@
           "column_align": ["left", "left", "left"], "cell_margin_px": [12, 18, 12, 18]
         },
         {
-          "id": "P01-note", "type": "text", "box": [48, 578, 1184, 64], "z": 2,
+          "id": "P01-note", "type": "text", "box": [48, 578, 820, 64], "z": 2,
           "text": "照片、插图和截图内部仍为位图。",
           "font_family": "Microsoft YaHei", "font_size_pt": 18,
           "bold": false, "color": "#5A6878", "align": "left", "valign": "top",
           "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
+        },
+        {
+          "id": "P01-decoration", "type": "image", "box": [924, 566, 300, 150],
+          "z": 1, "asset_id": "A001", "fit": "contain"
         }
       ]
     }
