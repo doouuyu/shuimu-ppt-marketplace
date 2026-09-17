@@ -9,6 +9,12 @@ description: "Create a hybrid image-based PPT using the retained AIHIA reference
 内容页由 `image_gen` 生成主体图片，再叠加原模板第 6 页的可编辑标题、紫色渐变标题栏和真实 AIHIA Logo。
 始终保持 `assets/reference.pptx` 不变，输出为新的 PPTX。
 
+## 制作前：需求转设计
+
+先按 [../ppt-design-brief/SKILL.md](../ppt-design-brief/SKILL.md) 判断范围与输入完整性。
+只有自然语言、对话或大纲时先形成逐页设计；已有完整设计直接复用，并保留本 Skill 的模板与编辑性要求。
+只交设计或用户要求等确认时，到文档交付为止；已授权制作则按页面 ID 和上屏文案继续以下流程。
+
 ## Workflow
 
 1. 完整读取 `references/template-guide.md`、`references/prompt-format.md` 和

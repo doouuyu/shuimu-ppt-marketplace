@@ -1,11 +1,27 @@
 ---
 name: shuimu-ppt
-description: Route a presentation request to the correct workflow in the 水木 PPT 套件. Use when the user explicitly invokes $shuimu-ppt, asks to use the 水木 PPT 套件, asks Codex to choose among $editable-ppt、$aihia、$qinghua-changgung-blue-realistic-tech、$pixel-defense-academic-ppt、水木青绿、水木青绿图片版、水木医蓝、$ppt-image-blue-orange-blocks and $ppt-image-deck, or gives a presentation request without knowing which bundled workflow fits. Do not replace a worker skill that the user explicitly invokes.
+description: 水木 PPT 套件总入口：将自然语言需求整理成逐页 Markdown 设计文档，再按范围交付文档或衔接九种制作流程。Use when the user invokes $shuimu-ppt, asks to use 水木 PPT 套件, needs help choosing its workflows, or wants a PPT but has only ideas/materials and no design document. Reuse an existing complete design and preserve any explicitly selected worker skill.
 ---
 
-# 水木 PPT 套件路由
+# 水木 PPT 套件入口
 
-本 Skill 只负责选择并交接给正确的工作 Skill，不自行生成幻灯片，也不混合不同工作流的规则。
+本 Skill 负责识别输入与交付范围，调用共用设计步骤，再选择并交接给正确的工作 Skill。
+不自行生成幻灯片，也不混合不同制作流程的规则。
+
+## 需求与设计前置步骤
+
+1. 用户只有自然语言想法、聊天记录、零散材料或大纲时，读取
+   [../ppt-design-brief/SKILL.md](../ppt-design-brief/SKILL.md)，先产出完整的逐页 Markdown 设计文档。
+   已有完整设计则检查后直接复用；只请求大纲或局部修改时不扩大范围。
+2. 用户已指定工作 Skill/模板时，把这个选择和已知视觉约束带入设计；必要时先读取所选 Skill 的视觉
+   规则，但不提前执行生图/组装。模板稍后提供时，先写内容与相对布局，不要求用户先补文档路径。
+3. 只要设计文档或明确要求确认后再制作时，到文档交付为止；不要求用户先选择制作方式。
+4. 已授权制作 PPT 时，保存并自检设计后继续下方路由。选择依据是用户的真实要求，不能把设计阶段
+   自行建议的颜色/模板当成用户点名。已选制作流程则直接交接，不再重新选择。
+5. 制作方式仍不明确且会影响编辑性时，只询问这个实际差异，等待期间完成不依赖答案的设计。
+   用户让自主选择且无品牌/编辑性要求时可采用通用图片版，并在设计中说明图片内部不可逐项编辑。
+
+共用设计是前置阶段，不算同时执行第二个制作 Skill；交接时带上已有文档，避免循环或重复设计。
 
 ## 可编辑流程独立入口
 
@@ -51,7 +67,7 @@ description: Route a presentation request to the correct workflow in the 水木 
 ## 交接流程
 
 1. 用一句话告知用户已选择的工作流及原因。
-2. 完整读取所选目录中的 `SKILL.md`：
+2. 带上设计文档路径、页面 ID、完整文案、风格/编辑性、素材及缺项，完整读取所选目录中的 `SKILL.md`：
    - `../editable-ppt/SKILL.md`
    - `../aihia/SKILL.md`
    - `../qinghua-changgung-blue-realistic-tech/SKILL.md`
@@ -61,11 +77,14 @@ description: Route a presentation request to the correct workflow in the 水木 
    - `../artifact-template-shuimu-yilan-ppt/SKILL.md`
    - `../ppt-image-blue-orange-blocks/SKILL.md`
    - `../ppt-image-deck/SKILL.md`
-3. 仅按所选工作 Skill 的要求继续；它引用的资料、脚本和模板按其说明加载。
+3. 仅按所选工作 Skill 的要求继续；它引用的资料、脚本和模板按其说明加载。已有设计通过检查后直接
+   用作内容输入，不再要求用户提供另一份需求文档，也不再运行一次前置步骤。
 4. 不同时执行两个工作 Skill，除非用户明确要求制作两个独立版本。
 
 ## 快速判断示例
 
+- “我想宣传这个产品，下面是想法，只给 Markdown 设计文档，模板之后提供” → `$ppt-design-brief`，交付后停止
+- “使用水木 PPT，下面是零散内容，整理好直接做成蓝橙块状图片版” → 共用设计文档 → `$ppt-image-blue-orange-blocks`
 - “用可编辑 PPT 风格，先写素材设计和排版设计，再生成 PPT” → `$editable-ppt`
 - “用可编辑 PPT 风格，外观参考清华长庚蓝，文字不要放进图片” → `$editable-ppt`，先确定具体蓝色参考，再绑定源页/图区域与生成无字装饰素材
 - “用可编辑 PPT 风格，套用 AIHIA 模板” → `$editable-ppt`，复用 AIHIA 原生封面 1、章节 4、标题栏 6、结束 14，正文原生组装

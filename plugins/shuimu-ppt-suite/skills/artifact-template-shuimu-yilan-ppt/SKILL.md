@@ -9,6 +9,12 @@ description: "Create a presentation using the 水木医蓝 · Shuimu Yilan PPT t
 
 本模板是**整页图片型模板**：参考稿每页是一张全画幅图片，不含可直接替换的原生文本框、图表或表格对象。新内容必须生成新的整页视觉，禁止把新文本框覆盖在旧页图片上。
 
+## 制作前：需求转设计
+
+先按 [../ppt-design-brief/SKILL.md](../ppt-design-brief/SKILL.md) 判断范围与输入完整性。
+只有自然语言、对话或大纲时先形成逐页设计；已有完整设计直接复用，并保留本 Skill 的模板与编辑性要求。
+只交设计或用户要求等确认时，到文档交付为止；已授权制作则按页面 ID 和上屏文案继续以下流程。
+
 ## Workflow
 
 1. 读取 `artifact-template.json`，相对于本 Skill 目录解析参考 PPTX 与预览路径。

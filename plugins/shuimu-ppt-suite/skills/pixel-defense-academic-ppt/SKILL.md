@@ -8,6 +8,13 @@ description: 端到端生成“像素答辩学术汇报风”的整页图片 PPT
 沿用 `ppt-image-deck` 的端到端图片版流程，把用户内容组织为正式、证据密集、结论先行的中文学术答辩
 PPT。不要把所有页面套成同一种标题条；根据叙事任务在参考库归纳出的页面家族中选择版式。
 
+## 制作前：需求转设计
+
+输入可为自然语言、对话、大纲或已有设计。先读取本 Skill 的 `references/style-contract.md` 和
+`references/page-family-map.md`，再按 [../ppt-design-brief/SKILL.md](../ppt-design-brief/SKILL.md)
+补齐逐页设计，已有完整设计则复用。共用默认不覆盖本风格。
+只交设计或要求等确认时到文档交付为止；已授权制作继续下方流程，基础 Skill 中相同的前置步骤不重复执行。
+
 ## 执行顺序
 
 1. 把当前 Skill 目录记为 `SKILL_DIR`，完整读取 `../ppt-image-deck/SKILL.md`。

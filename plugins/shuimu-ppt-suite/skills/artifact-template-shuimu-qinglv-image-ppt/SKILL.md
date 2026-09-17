@@ -20,6 +20,12 @@ description: "Create a hybrid image-based PPT that uses image_gen for each slide
 仅提到青绿色、医疗、医院、清华长庚内容或水木青绿风格时不得触发。若用户要求全原生可编辑，改用
 `$artifact-template-shuimu-qinglv-ppt`；若不要求清华长庚标题栏，改用普通图片版 PPT 工作流。
 
+## 制作前：需求转设计
+
+触发门禁满足后，按 [../ppt-design-brief/SKILL.md](../ppt-design-brief/SKILL.md) 判断范围与输入完整性。
+只有自然语言、对话或大纲时先形成逐页设计；已有完整设计直接复用，并保留本 Skill 的模板与编辑性要求。
+只交设计或用户要求等确认时，到文档交付为止；已授权制作则按页面 ID 和上屏文案继续以下流程。
+
 ## Workflow
 
 1. 读取 `artifact-template.json`，相对于本 Skill 目录解析参考 PPTX 与预览路径。

@@ -1,0 +1,6 @@
+interface:
+  display_name: "PPT 需求与设计文档"
+  short_description: "把自然语言需求整理为完整逐页文案、布局与视觉设计，并衔接制作流程"
+  default_prompt: "使用 $ppt-design-brief，把我下面的想法整理成可用于制作 PPT 的 Markdown 设计文档，写清每页完整文案、布局、视觉和素材要求。"
+policy:
+  allow_implicit_invocation: true

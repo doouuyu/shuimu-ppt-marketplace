@@ -1,5 +1,6 @@
 {
   "workflow": "editable-ppt",
+  "readability_profile": "screen",
   "canvas": {"width": 1280, "height": 720, "unit": "px"},
   "style": {"id": "neutral", "reference_kind": "none", "explicitly_requested": false},
   "assets": [{
@@ -16,7 +17,7 @@
       "elements": [
         {
           "id": "P01-title", "type": "text", "box": [48, 32, 1184, 76], "z": 2,
-          "text": "可编辑对象与修改方式", "font_family": "Microsoft YaHei", "font_size_pt": 36, "text_role": "title",
+          "text": "可编辑对象与修改方式", "font_family": "Microsoft YaHei", "font_size_pt": 34, "text_role": "title",
           "bold": true, "color": "#10367D", "align": "left", "valign": "middle",
           "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0,
           "max_lines": 1
@@ -24,13 +25,13 @@
         {
           "id": "P01-summary", "type": "text", "box": [48, 122, 1184, 52], "z": 2,
           "text": "文字与数据通过原生对象编辑，图片按需替换。",
-          "font_family": "Microsoft YaHei", "font_size_pt": 24, "text_role": "body",
+          "font_family": "Microsoft YaHei", "font_size_pt": 22, "text_role": "body",
           "bold": true, "color": "#111111", "align": "left", "valign": "top",
           "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
         },
         {
           "id": "P01-table", "type": "table", "box": [48, 212, 1184, 320], "z": 2,
-          "font_family": "Microsoft YaHei", "font_size_pt": 22, "text_role": "label", "bold": true,
+          "font_family": "Microsoft YaHei", "font_size_pt": 20, "text_role": "label", "bold": true,
           "rows": [["对象", "原生类型", "修改方式"], ["标题与正文", "文本框", "修改文字"], ["表格与图表", "表格或图表", "修改数据"], ["照片与插图", "图片素材", "替换文件"]],
           "column_widths": [320, 384, 480], "row_heights": [80, 80, 80, 80],
           "header_fill": "#10367D", "header_color": "#FFFFFF",
@@ -40,7 +41,7 @@
         {
           "id": "P01-note", "type": "text", "box": [48, 578, 820, 64], "z": 2,
           "text": "照片、插图和截图内部仍为位图。",
-          "font_family": "Microsoft YaHei", "font_size_pt": 20, "text_role": "footnote",
+          "font_family": "Microsoft YaHei", "font_size_pt": 18, "text_role": "footnote",
           "bold": true, "color": "#111111", "align": "left", "valign": "top",
           "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
         },

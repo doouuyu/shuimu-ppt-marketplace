@@ -7,6 +7,12 @@ description: "Create a presentation using the 水木青绿 · Shuimu Qinglv PPT 
 
 使用保留的原始 PPTX 创建医疗、科研、学术或工作汇报。始终保持参考文件不变，输出为新的 PPTX。
 
+## 制作前：需求转设计
+
+先按 [../ppt-design-brief/SKILL.md](../ppt-design-brief/SKILL.md) 判断范围与输入完整性。
+只有自然语言、对话或大纲时先形成逐页设计；已有完整设计直接复用，并保留本 Skill 的模板与编辑性要求。
+只交设计或用户要求等确认时，到文档交付为止；已授权制作则按页面 ID 和上屏文案继续以下流程。
+
 ## Workflow
 
 1. 读取 `artifact-template.json`，相对于本 Skill 目录解析模板与预览路径。

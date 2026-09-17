@@ -153,8 +153,15 @@ def luminance(color):
 
 
 def check_projection(plan):
-    """Conservative design checks, not a physical projector legibility guarantee."""
-    floors = {'cover_title': 44, 'title': 36, 'body': 24, 'label': 22, 'footnote': 20}
+    """Check the selected reading context; ordinary screen reading is the default."""
+    profile = plan.get('readability_profile', 'screen')
+    profiles = {
+        'screen': {'cover_title': 36, 'title': 28, 'body': 18, 'label': 18, 'footnote': 14},
+        'projection': {'cover_title': 42, 'title': 34, 'body': 22, 'label': 20, 'footnote': 18},
+    }
+    if not isinstance(profile, str) or profile not in profiles:
+        return ['readability_profile 必须为 screen 或 projection']
+    floors = profiles[profile]
     scale = plan['canvas']['height'] / 720
     errors = []
     for slide in plan.get('slides', []):
@@ -183,21 +190,21 @@ def check_projection(plan):
                 if role not in floors:
                     errors.append(f'{eid}: text_role 无效，必须声明真实阅读层级')
                 elif not number(size) or size < floors[role] * scale:
-                    errors.append(f'{eid}: 投影字号不足，{role} 至少 {floors[role] * scale:g} pt')
-                if style.get('bold') is not True:
+                    errors.append(f'{eid}: {profile} 字号不足，{role} 至少 {floors[role] * scale:g} pt')
+                if profile == 'projection' and style.get('bold') is not True:
                     errors.append(f'{eid}: 投影文字必须 bold=true，不使用常规或细字重')
                 if style.get('opacity', 1) != 1:
-                    errors.append(f'{eid}: 投影文字必须完全不透明')
+                    errors.append(f'{eid}: 阅读文字必须完全不透明')
                 foreground, background = rgb(style.get('color')), rgb(style.get('background_color'))
                 if foreground is None or background is None:
                     errors.append(f'{eid}: 文字及其实际局部背景必须显式使用 #RRGGBB')
                     continue
                 # Allow black/near-black and white; reject gray including muted blue-gray.
-                if max(foreground) > 24 and min(foreground) < 245 and max(foreground) - min(foreground) <= 40:
+                if profile == 'projection' and max(foreground) > 24 and min(foreground) < 245 and max(foreground) - min(foreground) <= 40:
                     errors.append(f'{eid}: 不使用灰色/灰蓝文字，改黑色、深品牌色或深底白字')
                 light, dark = sorted((luminance(foreground), luminance(background)), reverse=True)
                 if (light + .05) / (dark + .05) < 4.5:
-                    errors.append(f'{eid}: 文字与背景对比不足 4.5:1，投影优先达到 7:1')
+                    errors.append(f'{eid}: 文字与背景对比不足 4.5:1')
     return errors
 
 

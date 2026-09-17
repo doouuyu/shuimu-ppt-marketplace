@@ -12,8 +12,9 @@ class ProjectionReadabilityTest(unittest.TestCase):
 
     def plan(self, **changes):
         plan = existing.minimal_plan()
+        plan['readability_profile'] = 'projection'
         plan['slides'][0]['elements'][0].update(
-            text_role='body', font_size_pt=24, bold=True, color='#111111')
+            text_role='body', font_size_pt=22, bold=True, color='#111111')
         plan['slides'][0]['elements'][0].update(changes)
         return plan
 
@@ -24,7 +25,7 @@ class ProjectionReadabilityTest(unittest.TestCase):
         self.assertEqual([], self.errors(self.plan()))
 
     def test_small_body_rejected(self):
-        self.assertTrue(self.errors(self.plan(font_size_pt=22)))
+        self.assertTrue(self.errors(self.plan(font_size_pt=20)))
 
     def test_small_title_rejected(self):
         self.assertTrue(self.errors(self.plan(text_role='title', font_size_pt=32)))
@@ -78,5 +79,40 @@ class ProjectionReadabilityTest(unittest.TestCase):
         self.assertTrue(self.errors(plan))
 
     def test_footnote_has_explicit_floor(self):
-        self.assertEqual([], self.errors(self.plan(text_role='footnote', font_size_pt=20)))
-        self.assertTrue(self.errors(self.plan(text_role='footnote', font_size_pt=18)))
+        self.assertEqual([], self.errors(self.plan(text_role='footnote', font_size_pt=18)))
+        self.assertTrue(self.errors(self.plan(text_role='footnote', font_size_pt=16)))
+
+
+class ScreenReadabilityTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        existing.EditableWorkflowTest.setUpClass()
+        cls.check = existing.EditableWorkflowTest.check
+
+    plan = ProjectionReadabilityTest.plan
+    errors = ProjectionReadabilityTest.errors
+
+    def test_screen_is_default_and_allows_regular_dark_gray(self):
+        plan = self.plan(font_size_pt=20, bold=False, color='#4B5565')
+        plan.pop('readability_profile')
+        self.assertEqual([], self.errors(plan))
+
+    def test_screen_title_and_table_sizes_are_not_projection_sizes(self):
+        plan = self.plan(text_role='title', font_size_pt=30, bold=True, color='#172033')
+        plan['readability_profile'] = 'screen'
+        self.assertEqual([], self.errors(plan))
+        plan['slides'][0]['elements'][0].update(text_role='label', font_size_pt=18, bold=False)
+        self.assertEqual([], self.errors(plan))
+
+    def test_screen_still_rejects_unreadable_text(self):
+        plan = self.plan(font_size_pt=16, bold=False, color='#4B5565')
+        plan['readability_profile'] = 'screen'
+        self.assertTrue(self.errors(plan))
+
+    def test_projection_is_opt_in(self):
+        self.assertTrue(self.errors(self.plan(font_size_pt=20, bold=False, color='#4B5565')))
+
+    def test_unknown_profile_is_rejected(self):
+        plan = self.plan()
+        plan['readability_profile'] = 'other'
+        self.assertTrue(self.errors(plan))

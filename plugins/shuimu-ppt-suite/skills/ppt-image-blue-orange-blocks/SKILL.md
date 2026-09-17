@@ -8,6 +8,13 @@ description: 端到端生成白底蓝橙块状风格的整页图片 PPT。Use wh
 沿用 `ppt-image-deck` 的端到端流程，用固定的白底、蓝色主视觉、橙色强调和块状信息结构生成整套
 16:9 图片版 PPT。只改变视觉风格，不改变提示词文档、逐页生成、逐页核对和 PPTX 汇总步骤。
 
+## 制作前：需求转设计
+
+输入可为自然语言、对话、大纲或已有设计。先读取本 Skill 的 `references/blue-orange-block-style.md`，
+再按 [../ppt-design-brief/SKILL.md](../ppt-design-brief/SKILL.md) 补齐逐页设计，已有完整设计则复用。
+共用默认不覆盖本风格。只交设计或要求等确认时到文档交付为止；已授权制作继续下方流程，
+基础 Skill 中相同的前置步骤不重复执行。
+
 ## 执行顺序
 
 1. 把当前 Skill 目录记为 `SKILL_DIR`，解析同一插件中的基础 Skill：
