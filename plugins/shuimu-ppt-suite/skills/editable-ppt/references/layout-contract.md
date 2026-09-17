@@ -46,8 +46,8 @@ type 支持 text/image/shape/connector/table/chart。无论元素是否在组内
 ```json
 {
   "id": "P01-title", "type": "text", "box": [48, 28, 1184, 76], "z": 2,
-  "text": "专病科研平台建设", "font_family": "Microsoft YaHei",
-  "font_size_pt": 32, "bold": true, "color": "#10367D",
+  "text": "专病科研平台建设", "font_family": "Microsoft YaHei", "text_role": "title",
+  "font_size_pt": 36, "bold": true, "color": "#10367D", "background_color": "#FFFFFF",
   "align": "left", "valign": "middle", "margin_px": [0, 0, 0, 0],
   "line_spacing": 1.15, "paragraph_after_pt": 0,
   "max_lines": 1, "overflow": "reflow_then_revise"
@@ -56,6 +56,17 @@ type 支持 text/image/shape/connector/table/chart。无论元素是否在组内
 
 此字体名只是示例，构建前确认安装。实际 fontFamily / fontSizePt / verticalAlignment 等属性以本机
 presentations 文档为准。支持 `runs` 记录局部强调；text 仍需是全部 runs 的合并文字，以便核对。
+
+所有文字（含表格/图表）必须通过 projection-readability.md 的字号、粗体、禁灰字和对比度规则。
+text_role 取 cover_title/title/body/label/footnote；漏写时普通文字按 body、表格/图表按 label，
+ID 以 -title 结尾按标题检查；不得故意改角色绕过门槛。
+background_color 为文字实际背景，未写则继承 slide.background（未写页面背景时默认白色）。深底白字
+或色块上的字必须显式声明该局部背景；照片/渐变按最不利位置检查。文字 opacity 只能是 1。
+表格声明 header_color/header_fill/body_color/body_fill/alternate_fill；每格继承的 font_size_pt、
+bold 也要写在表格元素上。图表默认文字写 color/font_size_pt/bold，不依赖运行时的小灰字默认值。
+局部 runs 和表格单元格/图表轴图例覆盖的 text_styles 用扁平字段记录，如
+`{"text_role":"label","font_size_pt":22,"bold":true,"color":"#111111"}`，继承对象其余字段；
+局部背景不同也写 background_color。text_styles 仅是设计映射，不直接作为库 API 参数。
 
 ## 其他类型
 

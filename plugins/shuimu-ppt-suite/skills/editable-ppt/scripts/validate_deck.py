@@ -140,6 +140,67 @@ def number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
+def rgb(value):
+    if not isinstance(value, str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', value):
+        return None
+    return tuple(int(value[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def luminance(color):
+    channels = [v / 255 for v in color]
+    linear = [v / 12.92 if v <= .04045 else ((v + .055) / 1.055) ** 2.4 for v in channels]
+    return sum(v * weight for v, weight in zip(linear, (.2126, .7152, .0722)))
+
+
+def check_projection(plan):
+    """Conservative design checks, not a physical projector legibility guarantee."""
+    floors = {'cover_title': 44, 'title': 36, 'body': 24, 'label': 22, 'footnote': 20}
+    scale = plan['canvas']['height'] / 720
+    errors = []
+    for slide in plan.get('slides', []):
+        for element in slide.get('elements', []):
+            kind, eid = element.get('type'), element.get('id', '')
+            if kind not in ('text', 'table', 'chart'):
+                continue
+            default_role = 'label' if kind in ('table', 'chart') else 'body'
+            if str(eid).endswith('-title'):
+                default_role = 'cover_title' if slide.get('role') in ('cover', 'section') else 'title'
+            base = dict(element)
+            base.setdefault('text_role', default_role)
+            base.setdefault('background_color', slide.get('background', '#FFFFFF'))
+            styles = [base]
+            if kind == 'table':
+                styles = [dict(base, color=element.get('body_color', element.get('color')),
+                               background_color=element.get('body_fill', base['background_color']))]
+                if element.get('alternate_fill'):
+                    styles.append(dict(styles[0], background_color=element['alternate_fill']))
+                styles.append(dict(base, color=element.get('header_color', styles[0].get('color')),
+                                   background_color=element.get('header_fill', base['background_color'])))
+            for override in element.get('runs', []) + element.get('text_styles', []):
+                styles.append(dict(styles[0], **override))
+            for style in styles:
+                role, size = style.get('text_role'), style.get('font_size_pt')
+                if role not in floors:
+                    errors.append(f'{eid}: text_role 无效，必须声明真实阅读层级')
+                elif not number(size) or size < floors[role] * scale:
+                    errors.append(f'{eid}: 投影字号不足，{role} 至少 {floors[role] * scale:g} pt')
+                if style.get('bold') is not True:
+                    errors.append(f'{eid}: 投影文字必须 bold=true，不使用常规或细字重')
+                if style.get('opacity', 1) != 1:
+                    errors.append(f'{eid}: 投影文字必须完全不透明')
+                foreground, background = rgb(style.get('color')), rgb(style.get('background_color'))
+                if foreground is None or background is None:
+                    errors.append(f'{eid}: 文字及其实际局部背景必须显式使用 #RRGGBB')
+                    continue
+                # Allow black/near-black and white; reject gray including muted blue-gray.
+                if max(foreground) > 24 and min(foreground) < 245 and max(foreground) - min(foreground) <= 40:
+                    errors.append(f'{eid}: 不使用灰色/灰蓝文字，改黑色、深品牌色或深底白字')
+                light, dark = sorted((luminance(foreground), luminance(background)), reverse=True)
+                if (light + .05) / (dark + .05) < 4.5:
+                    errors.append(f'{eid}: 文字与背景对比不足 4.5:1，投影优先达到 7:1')
+    return errors
+
+
 def retained_template_bleed(element, slide, width, height):
     """Declared source-object bleed still requires comparison with the rendered template."""
     if not (element.get('template_bleed') is True and element.get('source_object')
@@ -249,6 +310,7 @@ def validate_plan(plan, base, require_assets=False):
             if e.get('type') == 'connector' and any(e.get(k) not in local_ids for k in ('from', 'to')):
                 errors.append(f'{e.get("id")}: 连接端点必须存在于同页')
     errors.extend(check_delivery(plan, base, require_assets))
+    errors.extend(check_projection(plan))
     return errors
 
 

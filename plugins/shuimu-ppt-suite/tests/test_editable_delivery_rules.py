@@ -35,6 +35,7 @@ class EditableDeliveryRulesTest(unittest.TestCase):
                          'reference_path': str(ROOT / 'skills' / folder / 'assets/reference.pptx'),
                          'explicitly_requested': True}
         plan['slides'][0]['role'] = 'cover'
+        plan['slides'][0]['elements'][0]['font_size_pt'] = 44
         plan['slides'][0]['template_source'] = {
             'slide': 1, 'mode': 'duplicate-slide',
             'preserve': ['theme', 'layout', 'background', 'logo', 'title-style']}

@@ -17,7 +17,7 @@ def minimal_plan():
                     'purpose': 'decorative', 'text_free': True, 'prompt': '无字柔和波纹', 'status': 'planned'}],
         'slides': [{'id': 'P01', 'role': 'content', 'elements': [{
             'id': 'P01-title', 'type': 'text', 'box': [48, 32, 1150, 72], 'z': 2,
-            'text': '可编辑标题', 'font_family': 'Arial', 'font_size_pt': 32,
+            'text': '可编辑标题', 'font_family': 'Arial', 'font_size_pt': 36,
             'bold': True, 'color': '#10367D', 'align': 'left', 'valign': 'middle',
             'margin_px': [0, 0, 0, 0], 'line_spacing': 1.15, 'paragraph_after_pt': 0,
         }, {'id': 'P01-art', 'type': 'image', 'box': [880, 300, 300, 250], 'z': 1,
