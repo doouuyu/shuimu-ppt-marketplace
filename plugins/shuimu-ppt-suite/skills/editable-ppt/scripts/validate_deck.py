@@ -152,12 +152,22 @@ def luminance(color):
     return sum(v * weight for v, weight in zip(linear, (.2126, .7152, .0722)))
 
 
+def text_role(element, slide):
+    if str(element.get('id', '')).endswith('-subtitle'):
+        return 'subtitle'
+    if element.get('text_role'):
+        return element['text_role']
+    if str(element.get('id', '')).endswith('-title'):
+        return 'cover_title' if slide.get('role') in ('cover', 'section') else 'title'
+    return 'label' if element.get('type') in ('table', 'chart') else 'body'
+
+
 def check_projection(plan):
     """Check the selected reading context; ordinary screen reading is the default."""
     profile = plan.get('readability_profile', 'screen')
     profiles = {
-        'screen': {'cover_title': 36, 'title': 28, 'body': 18, 'label': 18, 'footnote': 14},
-        'projection': {'cover_title': 42, 'title': 34, 'body': 22, 'label': 20, 'footnote': 18},
+        'screen': {'cover_title': 36, 'title': 28, 'subtitle': 24, 'body': 18, 'label': 18, 'footnote': 14},
+        'projection': {'cover_title': 42, 'title': 34, 'subtitle': 28, 'body': 22, 'label': 20, 'footnote': 18},
     }
     if not isinstance(profile, str) or profile not in profiles:
         return ['readability_profile 必须为 screen 或 projection']
@@ -165,15 +175,16 @@ def check_projection(plan):
     scale = plan['canvas']['height'] / 720
     errors = []
     for slide in plan.get('slides', []):
+        tiers = {role: [] for role in floors}
         for element in slide.get('elements', []):
             kind, eid = element.get('type'), element.get('id', '')
             if kind not in ('text', 'table', 'chart'):
                 continue
-            default_role = 'label' if kind in ('table', 'chart') else 'body'
-            if str(eid).endswith('-title'):
-                default_role = 'cover_title' if slide.get('role') in ('cover', 'section') else 'title'
+            default_role = text_role(element, slide)
+            if default_role == 'subtitle' and element.get('text_role', 'subtitle') != 'subtitle':
+                errors.append(f'{eid}: 页面副标题必须使用 subtitle 角色，不能标成正文或脚注')
             base = dict(element)
-            base.setdefault('text_role', default_role)
+            base['text_role'] = default_role
             base.setdefault('background_color', slide.get('background', '#FFFFFF'))
             styles = [base]
             if kind == 'table':
@@ -187,6 +198,11 @@ def check_projection(plan):
                 styles.append(dict(styles[0], **override))
             for style in styles:
                 role, size = style.get('text_role'), style.get('font_size_pt')
+                if default_role == 'subtitle' and role != 'subtitle':
+                    errors.append(f'{eid}: 副标题局部样式不能改变 subtitle 角色')
+                    role = 'subtitle'
+                if role in tiers and number(size):
+                    tiers[role].append(size)
                 if role not in floors:
                     errors.append(f'{eid}: text_role 无效，必须声明真实阅读层级')
                 elif not number(size) or size < floors[role] * scale:
@@ -205,6 +221,16 @@ def check_projection(plan):
                 light, dark = sorted((luminance(foreground), luminance(background)), reverse=True)
                 if (light + .05) / (dark + .05) < 4.5:
                     errors.append(f'{eid}: 文字与背景对比不足 4.5:1')
+        if tiers['subtitle']:
+            titles = tiers['title'] + tiers['cover_title']
+            body = tiers['body'] + tiers['label']
+            gap = 2 * scale
+            if not titles:
+                errors.append(f'{slide.get("id")}: 有副标题时须声明同页主标题以核对字号层级')
+            elif max(tiers['subtitle']) > min(titles) - gap:
+                errors.append(f'{slide.get("id")}: 副标题须比主标题至少小 {gap:g} pt')
+            if body and min(tiers['subtitle']) < max(body) + gap:
+                errors.append(f'{slide.get("id")}: 副标题须比正文/标签至少大 {gap:g} pt')
     return errors
 
 
@@ -325,6 +351,41 @@ def normalized(text):
     return re.sub(r'\s+', '', text)
 
 
+def audit_subtitle_font(element, obj):
+    """Require resolvable subtitle sizes; do not guess template/theme inheritance."""
+    eid = element['id']
+    errors, sizes = [], []
+    for fit in obj.findall('.//a:normAutofit', NS):
+        if int(fit.get('fontScale', '100000')) < 100000:
+            errors.append(f'{eid}: PPTX 副标题被自动缩小，须重新排版')
+    for paragraph in obj.findall('p:txBody/a:p', NS):
+        props = paragraph.find('a:pPr', NS)
+        level = int(props.get('lvl', '0')) + 1 if props is not None else 1
+        defaults = [
+            paragraph.find('a:pPr/a:defRPr', NS),
+            obj.find(f'p:txBody/a:lstStyle/a:lvl{level}pPr/a:defRPr', NS),
+            obj.find('p:txBody/a:lstStyle/a:defPPr/a:defRPr', NS),
+        ]
+        for run in paragraph:
+            text = run.find('a:t', NS)
+            if text is None or not (text.text or '').strip():
+                continue
+            candidates = [run.find('a:rPr', NS)] + defaults
+            raw = next((p.get('sz') for p in candidates if p is not None and p.get('sz')), None)
+            if raw is None:
+                errors.append(f'{eid}: 无法解析 PPTX 副标题字号，须显式写入字号后重检')
+            else:
+                sizes.append(int(raw) / 100)
+    planned = [element.get('font_size_pt')]
+    planned += [s.get('font_size_pt', element.get('font_size_pt'))
+                for s in element.get('runs', []) + element.get('text_styles', [])]
+    planned = [s for s in planned if number(s)]
+    if sizes and planned and (min(sizes) < min(planned) - .05 or max(sizes) > max(planned) + .05):
+        errors.append(f'{eid}: PPTX 副标题字号 {min(sizes):g}–{max(sizes):g} pt '
+                      f'与设计 {min(planned):g}–{max(planned):g} pt 不一致')
+    return errors
+
+
 def audit_pptx(plan, pptx):
     """Check slide order, object types and text. Rendering/fonts/data still need visual QA."""
     errors = []
@@ -369,6 +430,8 @@ def audit_pptx(plan, pptx):
                     actual = ''.join(n.text or '' for n in obj.findall('.//a:t', NS))
                     if normalized(actual) != normalized(element['text']):
                         errors.append(f'{eid}: 原生文字与设计文案不一致')
+                    if text_role(element, slide) == 'subtitle':
+                        errors.extend(audit_subtitle_font(element, obj))
                 elif kind == 'table':
                     table = obj.find('.//a:tbl', NS)
                     if table is None:

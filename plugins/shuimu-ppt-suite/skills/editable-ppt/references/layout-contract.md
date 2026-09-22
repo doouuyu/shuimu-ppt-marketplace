@@ -59,8 +59,10 @@ type 支持 text/image/shape/connector/table/chart。无论元素是否在组内
 presentations 文档为准。支持 `runs` 记录局部强调；text 仍需是全部 runs 的合并文字，以便核对。
 
 所有文字（含表格/图表）按 projection-readability.md 中选定的阅读场景检查，默认 screen；仅明确远距离投影时选择 projection。screen 不要求全部加粗，也不禁止对比度合格的深灰文字。
-text_role 取 cover_title/title/body/label/footnote；漏写时普通文字按 body、表格/图表按 label，
-ID 以 -title 结尾按标题检查；不得故意改角色绕过门槛。
+text_role 取 cover_title/title/subtitle/body/label/footnote；漏写时普通文字按 body、表格/图表按 label，
+ID 以 -title 结尾按标题检查，以 -subtitle 结尾按副标题检查。页面副标题必须用 subtitle，不能标成 body/footnote。
+同页主标题、副标题、正文/标签之间至少各差 2 pt（随画布缩放），局部 runs/text_styles 也参与比较；
+副标题不可通过局部覆盖降低角色。默认使用 32 / 26 / 20 pt，副标题适度加粗；无副标题时无需创建对象。
 background_color 为文字实际背景，未写则继承 slide.background（未写页面背景时默认白色）。深底白字
 或色块上的字必须显式声明该局部背景；照片/渐变按最不利位置检查。文字 opacity 只能是 1。
 表格声明 header_color/header_fill/body_color/body_fill/alternate_fill；每格继承的 font_size_pt、

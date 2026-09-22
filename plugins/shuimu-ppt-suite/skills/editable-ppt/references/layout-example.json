@@ -23,10 +23,10 @@
           "max_lines": 1
         },
         {
-          "id": "P01-summary", "type": "text", "box": [48, 122, 1184, 52], "z": 2,
-          "text": "文字与数据通过原生对象编辑，图片按需替换。",
-          "font_family": "Microsoft YaHei", "font_size_pt": 22, "text_role": "body",
-          "bold": true, "color": "#111111", "align": "left", "valign": "top",
+          "id": "P01-subtitle", "type": "text", "box": [48, 122, 1184, 64], "z": 2,
+          "text": "文字与数据通过原生对象编辑，图片按需替换",
+          "font_family": "Microsoft YaHei", "font_size_pt": 26, "text_role": "subtitle",
+          "bold": true, "color": "#10367D", "align": "left", "valign": "top",
           "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
         },
         {
