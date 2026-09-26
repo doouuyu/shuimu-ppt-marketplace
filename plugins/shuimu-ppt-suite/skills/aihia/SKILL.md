@@ -5,6 +5,12 @@ description: "Create a hybrid image-based PPT using the retained AIHIA reference
 
 # AIHIA 图片混合 PPT
 
+## 样式优先级
+
+用户在本次对话输入框明确写出的要求 > 所选 Skill 规范 > 附件设计文档的样式建议。
+附件仅用于逐页内容、页序和图文摆放参考；全局字体字号、配色、层级及装饰按 Skill 执行。
+“按附件制作”不自动授权附件样式覆盖 Skill。使用附件前遵循[样式来源规则](../ppt-design-brief/references/style-priority.md)。
+
 使用保留的 AIHIA 模板创建图片主体与原生品牌对象混合的演示文稿：封面直接复制原模板第 1 页，普通
 内容页由 `image_gen` 生成主体图片，再叠加原模板第 6 页的可编辑标题、紫色渐变标题栏和真实 AIHIA Logo。
 始终保持 `assets/reference.pptx` 不变，输出为新的 PPTX。

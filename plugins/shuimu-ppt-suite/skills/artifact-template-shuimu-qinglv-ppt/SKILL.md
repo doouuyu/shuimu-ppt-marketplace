@@ -5,6 +5,12 @@ description: "Create a presentation using the 水木青绿 · Shuimu Qinglv PPT 
 
 # 水木青绿 · Shuimu Qinglv PPT
 
+## 样式优先级
+
+用户在本次对话输入框明确写出的要求 > 所选 Skill 规范 > 附件设计文档的样式建议。
+附件仅用于逐页内容、页序和图文摆放参考；全局字体字号、配色、层级及装饰按 Skill 执行。
+“按附件制作”不自动授权附件样式覆盖 Skill。使用附件前遵循[样式来源规则](../ppt-design-brief/references/style-priority.md)。
+
 使用保留的原始 PPTX 创建医疗、科研、学术或工作汇报。始终保持参考文件不变，输出为新的 PPTX。
 
 ## 制作前：需求转设计

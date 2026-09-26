@@ -140,6 +140,30 @@ def number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
+def check_style_authority(plan):
+    """Attachment styling must not be promoted to a user-message exception."""
+    errors = []
+    order = plan.get('style_authority')
+    if order is not None and order != ['user_message', 'selected_skill', 'attachment_layout']:
+        errors.append('样式优先级必须为 user_message → selected_skill → attachment_layout')
+    overrides = plan.get('user_overrides', [])
+    if not isinstance(overrides, list):
+        return errors + ['user_overrides 必须为来源明确的对象列表']
+    ids = {e.get('id') for slide in plan.get('slides', []) for e in slide.get('elements', [])}
+    for index, item in enumerate(overrides, 1):
+        if not isinstance(item, dict) or item.get('source') != 'user_message':
+            errors.append(f'user_overrides[{index}]: 样式例外须来自输入框 user_message，不能由附件或自由文本授权')
+            continue
+        if not isinstance(item.get('quote'), str) or not item['quote'].strip():
+            errors.append(f'user_overrides[{index}]: 必须记录输入框中的用户原话 quote')
+        targets = item.get('element_ids')
+        if not isinstance(targets, list) or not targets or any(not isinstance(e, str) or e not in ids for e in targets):
+            errors.append(f'user_overrides[{index}]: element_ids 必须列出清单中实际受影响的对象')
+        if not isinstance(item.get('properties'), dict) or not item['properties']:
+            errors.append(f'user_overrides[{index}]: 必须记录明确要求的样式 properties')
+    return errors
+
+
 def rgb(value):
     if not isinstance(value, str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', value):
         return None
@@ -342,6 +366,7 @@ def validate_plan(plan, base, require_assets=False):
         for e in elements:
             if e.get('type') == 'connector' and any(e.get(k) not in local_ids for k in ('from', 'to')):
                 errors.append(f'{e.get("id")}: 连接端点必须存在于同页')
+    errors.extend(check_style_authority(plan))
     errors.extend(check_delivery(plan, base, require_assets))
     errors.extend(check_projection(plan))
     return errors

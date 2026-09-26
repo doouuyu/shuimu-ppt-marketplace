@@ -5,6 +5,12 @@ description: "Create a presentation using the 水木医蓝 · Shuimu Yilan PPT t
 
 # 水木医蓝 · Shuimu Yilan PPT
 
+## 样式优先级
+
+用户在本次对话输入框明确写出的要求 > 所选 Skill 规范 > 附件设计文档的样式建议。
+附件仅用于逐页内容、页序和图文摆放参考；全局字体字号、配色、层级及装饰按 Skill 执行。
+“按附件制作”不自动授权附件样式覆盖 Skill。使用附件前遵循[样式来源规则](../ppt-design-brief/references/style-priority.md)。
+
 使用保留的 30 页参考 PPTX 创建医院、临床科研、数智医疗、国家项目合作或学术工作汇报。始终保持参考文件不变，输出为新的 PPTX。
 
 本模板是**整页图片型模板**：参考稿每页是一张全画幅图片，不含可直接替换的原生文本框、图表或表格对象。新内容必须生成新的整页视觉，禁止把新文本框覆盖在旧页图片上。

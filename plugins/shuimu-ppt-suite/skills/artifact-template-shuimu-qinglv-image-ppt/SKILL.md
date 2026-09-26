@@ -5,6 +5,12 @@ description: "Create a hybrid image-based PPT that uses image_gen for each slide
 
 # 水木青绿图片版 · 原生标题栏混合 PPT
 
+## 样式优先级
+
+用户在本次对话输入框明确写出的要求 > 所选 Skill 规范 > 附件设计文档的样式建议。
+附件仅用于逐页内容、页序和图文摆放参考；全局字体字号、配色、层级及装饰按 Skill 执行。
+“按附件制作”不自动授权附件样式覆盖 Skill。使用附件前遵循[样式来源规则](../ppt-design-brief/references/style-priority.md)。
+
 使用 `image_gen` 生成每页主体图片，再把保留的清华长庚原生标题栏覆盖到图片上方。始终保持
 `assets/reference.pptx` 不变，输出为新的 PPTX。
 

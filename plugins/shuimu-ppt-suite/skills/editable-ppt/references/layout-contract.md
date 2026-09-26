@@ -22,7 +22,9 @@
 ```
 
 这是字段示意，实际 slides 不能空，必须有 image 元素引用生成装饰。模板绑定字段见 template-binding.md。
-style 必填，不得隐式选择像素答辩。命名原生模板必须核对 reference_path 与套件原文件，按源页角色复用。
+style 必填，不得隐式选择像素答辩。样式按输入框明确要求 → 所选 Skill → 附件建议执行。
+需要记录例外时，user_overrides 使用包含 source: user_message、用户原话 quote、element_ids 与 properties 的对象；
+禁止用附件字号或自由文本声称用户例外。例外记录不自动免除数值与渲染检查。命名原生模板必须核对 reference_path 与套件原文件，按源页角色复用。
 
 素材项：`id, path, kind, source, text_free`。path 相对于 layout.json 所在目录，如 `../assets/A001.png`。
 source 为 generated/user/external/template；生成项必须 `text_free: true`、完整 prompt 和 status。
