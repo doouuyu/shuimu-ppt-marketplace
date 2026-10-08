@@ -10,8 +10,8 @@ from test_editable_workflow import minimal_plan, ROOT
 def delivery_plan():
     plan = minimal_plan()
     plan['style'] = {'id': 'neutral', 'reference_kind': 'none', 'explicitly_requested': False}
-    plan['assets'] = [{'id': 'A01', 'path': 'a.png', 'kind': 'decoration',
-                       'purpose': 'decorative', 'source': 'generated', 'text_free': True,
+    plan['assets'] = [{'id': 'A01', 'path': 'a.png', 'kind': 'scene',
+                       'purpose': 'primary', 'source': 'generated', 'text_free': True,
                        'prompt': '无文字柔和蓝色波纹装饰', 'status': 'planned'}]
     plan['slides'][0]['elements'] = [plan['slides'][0]['elements'][0], {
         'id': 'P01-art', 'type': 'image', 'asset_id': 'A01', 'fit': 'contain',
@@ -30,9 +30,9 @@ class EditableDeliveryRulesTest(unittest.TestCase):
 
     def native_plan(self, profile='aihia'):
         plan = delivery_plan()
-        folder = 'aihia' if profile == 'aihia' else 'artifact-template-shuimu-qinglv-ppt'
+        folder = 'aihia' if profile == 'aihia' else 'shuimu-qinglv'
         plan['style'] = {'id': profile, 'reference_kind': 'native-template',
-                         'reference_path': str(ROOT / 'skills' / folder / 'assets/reference.pptx'),
+                         'reference_path': str(ROOT / 'styles' / folder / 'assets/reference.pptx'),
                          'explicitly_requested': True}
         plan['slides'][0]['role'] = 'cover'
         plan['slides'][0]['elements'][0]['font_size_pt'] = 44
@@ -115,12 +115,12 @@ class EditableDeliveryRulesTest(unittest.TestCase):
         plan['review_gaps'] = [{'page': 'P01', 'missing': '待补充病例数', 'action': 'omitted'}]
         self.assertEqual([], self.errors(plan))
 
-    def test_hard_corner_content_panels_rejected_by_default(self):
+    def test_formal_square_panels_allowed_with_semantic_main_visual(self):
         plan = delivery_plan()
         plan['slides'][0]['elements'].append({
             'id': 'P01-box', 'type': 'shape', 'geometry': 'rect', 'purpose': 'content-panel',
             'box': [50, 150, 300, 300], 'z': 0})
-        self.assertTrue(self.errors(plan))
+        self.assertEqual([], self.errors(plan))
 
     def test_reused_template_header_may_keep_square_corners(self):
         plan = self.native_plan()
@@ -139,13 +139,13 @@ class EditableDeliveryRulesTest(unittest.TestCase):
 
     def test_accepted_real_image_can_enter_assembly(self):
         plan = delivery_plan()
-        path = ROOT / 'skills/pixel-defense-academic-ppt/assets/calibrated-content-example.png'
+        path = ROOT / 'styles/pixel-defense-academic-ppt/assets/calibrated-content-example.png'
         plan['assets'][0].update(path=str(path), status='accepted', width_px=1672, height_px=941)
         self.assertEqual([], self.errors(plan, require_assets=True))
 
     def test_existing_image_without_acceptance_cannot_enter_assembly(self):
         plan = delivery_plan()
-        path = ROOT / 'skills/pixel-defense-academic-ppt/assets/calibrated-content-example.png'
+        path = ROOT / 'styles/pixel-defense-academic-ppt/assets/calibrated-content-example.png'
         plan['assets'][0].update(path=str(path), width_px=1672, height_px=941)
         self.assertTrue(self.errors(plan, require_assets=True))
 
@@ -167,7 +167,7 @@ class EditableDeliveryRulesTest(unittest.TestCase):
         plan['style'] = {
             'id': 'pixel-defense-academic-ppt', 'explicitly_requested': True,
             'reference_kind': 'image-reference',
-            'reference_path': str(ROOT / 'skills/pixel-defense-academic-ppt/assets/content-layout-reference.png')}
+            'reference_path': str(ROOT / 'styles/pixel-defense-academic-ppt/assets/content-layout-reference.png')}
         plan['slides'][0]['reference_anchor'] = '内容页图版左上样本'
         plan['slides'][0]['elements'].append({
             'id': 'P01-box', 'type': 'shape', 'geometry': 'rect', 'purpose': 'content-panel',

@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "default_workflow": "editable-ppt",
+  "default_style": "shuimu-qinglv",
+  "styles": [
+    {
+      "id": "shuimu-qinglv",
+      "name": "清华长庚绿",
+      "aliases": [
+        "水木青绿",
+        "清华长庚青绿",
+        "清华长庚模板",
+        "清华长庚风格",
+        "artifact-template-shuimu-qinglv-ppt",
+        "artifact-template-shuimu-qinglv-image-ppt",
+        "水木青绿（清华长庚绿）",
+        "水木青绿(清华长庚绿)",
+        "清华长庚医院原生模板"
+      ],
+      "guide": "shuimu-qinglv/references/template-guide.md",
+      "reference_kind": "native-template",
+      "reference": "shuimu-qinglv/assets/reference.pptx",
+      "preview": "shuimu-qinglv/assets/preview.png",
+      "native_brand_required": true,
+      "roles": {
+        "cover": [
+          1
+        ],
+        "toc": [
+          2
+        ],
+        "section": [
+          3,
+          6,
+          9
+        ],
+        "content": [
+          4,
+          5,
+          7,
+          8,
+          10,
+          11
+        ],
+        "ending": [
+          12
+        ]
+      },
+      "visual_description": "清华长庚青绿，白底，原生渐变标题栏白字，底部青绿流线、低对比建筑与柔和光感形成连续装饰；原生文字、表格、流程图与结论条保持清晰对齐；按内容需要配置边缘淡化的医疗场景插画，不逐页强塞独立主图",
+      "composition_reference": "shuimu-qinglv/assets/approved-reference.pptx",
+      "composition_preview": "shuimu-qinglv/assets/approved-preview.png",
+      "composition_roles": {
+        "cover": [
+          1
+        ],
+        "content": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      "design_assets": {
+        "content-background": {
+          "path": "shuimu-qinglv/assets/content-background.png",
+          "sha256": "e0a8fea96abb194bd0aca41450a1fe534369aea4593278579e1d2c2d8b3d3386",
+          "source_slide": 2,
+          "source_object": "P02-background",
+          "purpose": "decorative",
+          "reuse": "all-content-pages"
+        },
+        "ward-scene": {
+          "path": "shuimu-qinglv/assets/ward-scene.png",
+          "sha256": "6c628671baf23bbe53099bd63d10e0b999155006d3c978fc1fa4e40d1bdaffe9",
+          "source_slide": 6,
+          "source_object": "P06-research-ward",
+          "purpose": "primary",
+          "reuse": "matching-content-only"
+        },
+        "research-scene": {
+          "path": "shuimu-qinglv/assets/research-scene.png",
+          "sha256": "78aa51d7f71b88eb1e7f2261970c0d7a2f6557a0cce46f4ef7339a121a775649",
+          "source_slide": 11,
+          "source_object": "P11-researcher",
+          "purpose": "primary",
+          "reuse": "matching-content-only"
+        },
+        "care-scene": {
+          "path": "shuimu-qinglv/assets/care-scene.png",
+          "sha256": "e0bcb9de9f626421685e78a6687b6871c42fdbffcf9b0eaa3fe7e08ddeb4f632",
+          "source_slide": 12,
+          "source_object": "P12-consent",
+          "purpose": "primary",
+          "reuse": "matching-content-only"
+        }
+      },
+      "default_decoration": "content-background",
+      "cover_required_slots": [
+        "hero",
+        "title"
+      ]
+    },
+    {
+      "id": "qinghua-changgung-blue",
+      "name": "清华长庚蓝",
+      "aliases": [
+        "清华长庚蓝写实科技风",
+        "清华长庚蓝写实风",
+        "清华长庚蓝科技图片版",
+        "qinghua-changgung-blue-realistic-tech"
+      ],
+      "guide": "qinghua-changgung-blue/references/template-guide.md",
+      "visual_guide": "qinghua-changgung-blue/references/style-contract.md",
+      "reference_kind": "native-template",
+      "reference": "qinghua-changgung-blue/assets/reference.pptx",
+      "preview": "qinghua-changgung-blue/assets/preview.png",
+      "visual_reference": "qinghua-changgung-blue/assets/style-reference.jpg",
+      "native_brand_required": true,
+      "roles": {
+        "cover": [
+          1
+        ],
+        "toc": [
+          2
+        ],
+        "section": [
+          3
+        ],
+        "content": [
+          4,
+          5
+        ],
+        "ending": [
+          6
+        ]
+      },
+      "provenance": "基于清华长庚原生模板与蓝色视觉参考新建的套件模板",
+      "sha256": "eaa4318db1dd445d2346d5c42ce55a05e80cf89693aaba5b7aab4fb5f05fe47b",
+      "native_object_provenance": "qinghua-changgung-blue/provenance.json",
+      "visual_description": "清华长庚蓝写实科技视觉，冰白底、深海军蓝#063B78、医疗蓝#0B63B6、亮蓝#148BD2与青蓝#15ADD4，少量橙色强调，清晰写实的医学科研场景或精致科技结构主图，局部数据连接与柔和蓝色光带，主体大、科技感明确且正式"
+    },
+    {
+      "id": "aihia",
+      "name": "AIHIA",
+      "aliases": [
+        "华医智锦",
+        "华医智锦模板"
+      ],
+      "guide": "aihia/references/template-guide.md",
+      "reference_kind": "native-template",
+      "reference": "aihia/assets/reference.pptx",
+      "preview": "aihia/assets/preview.png",
+      "native_brand_required": false,
+      "roles": {
+        "cover": [
+          1
+        ],
+        "toc": [
+          3
+        ],
+        "section": [
+          4
+        ],
+        "content": [
+          6
+        ],
+        "ending": [
+          14
+        ]
+      },
+      "visual_description": "AIHIA紫色医疗科技视觉，白底、深紫和柔和紫色，主体大、写实医学场景与克制科技装饰，保持医院汇报的清晰留白"
+    },
+    {
+      "id": "shuimu-yilan",
+      "name": "水木医蓝",
+      "aliases": [
+        "artifact-template-shuimu-yilan-ppt"
+      ],
+      "guide": "shuimu-yilan/references/template-guide.md",
+      "reference_kind": "image-reference",
+      "reference": "shuimu-yilan/assets/reference.pptx",
+      "preview": "shuimu-yilan/assets/preview.png",
+      "native_brand_required": false,
+      "visual_description": "水木医蓝视觉，深海军蓝与医疗蓝、清爽白底、流动科技光线和建筑线稿、清晰留白"
+    },
+    {
+      "id": "pixel-defense-academic-ppt",
+      "name": "像素答辩学术汇报风",
+      "aliases": [
+        "像素答辩",
+        "像素答辩风",
+        "高密度科研答辩图片版"
+      ],
+      "guide": "pixel-defense-academic-ppt/references/style-contract.md",
+      "reference_kind": "image-reference",
+      "reference": "pixel-defense-academic-ppt/assets/content-layout-reference.png",
+      "preview": "pixel-defense-academic-ppt/assets/style-reference-overview.png",
+      "native_brand_required": false,
+      "visual_description": "像素答辩学术视觉，白底机构蓝、方正证据图版、正式科研构图、清晰严谨的信息层次"
+    },
+    {
+      "id": "blue-orange",
+      "name": "蓝橙块状",
+      "aliases": [
+        "蓝橙块状图片版",
+        "ppt-image-blue-orange-blocks"
+      ],
+      "guide": "blue-orange/references/blue-orange-block-style.md",
+      "reference_kind": "none",
+      "native_brand_required": false,
+      "visual_description": "白底蓝橙块状视觉，蓝色为主，橙色少量强调，清晰的大块面和大主体，少图标、少装饰，正式简洁"
+    },
+    {
+      "id": "technology",
+      "name": "科技风",
+      "aliases": [
+        "蓝色科技风",
+        "科技"
+      ],
+      "guide": "technology.md",
+      "reference_kind": "none",
+      "native_brand_required": false,
+      "visual_description": "白底蓝色科技视觉，深蓝与青蓝，大尺寸科研场景或技术结构主图，细线网络、柔和数据流和克制科技点缀，清晰留白"
+    },
+    {
+      "id": "government",
+      "name": "政务风",
+      "aliases": [
+        "政务",
+        "政府汇报"
+      ],
+      "guide": "government.md",
+      "reference_kind": "none",
+      "native_brand_required": false,
+      "visual_description": "正式政务视觉，白底，深蓝或用户指定品牌色，方正对齐，大幅场景或简洁关系示意，低干扰背景和克制点缀"
+    },
+    {
+      "id": "academic",
+      "name": "学术风",
+      "aliases": [
+        "学术",
+        "科研风"
+      ],
+      "guide": "academic.md",
+      "reference_kind": "none",
+      "native_brand_required": false,
+      "visual_description": "正式学术视觉，白底，深蓝主色，清晰科学插图和证据对应，简洁标注空间、克制装饰"
+    }
+  ]
+}

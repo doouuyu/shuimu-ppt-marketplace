@@ -1,4 +1,0 @@
-interface:
-  display_name: "蓝橙块状图片版 PPT"
-  short_description: "白底蓝橙、少图标多色块的整页图片 PPT 生成工作流"
-  default_prompt: "使用 $ppt-image-blue-orange-blocks 根据我的内容生成白底蓝橙块状图片版 PPT。"

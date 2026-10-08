@@ -1,7 +1,0 @@
-interface:
-  display_name: "水木医蓝 · Shuimu Yilan PPT"
-  short_description: "Create presentations with the 水木医蓝 · Shuimu Yilan PPT template"
-  icon_large: "./assets/preview.png"
-  default_prompt: "Use $artifact-template-shuimu-yilan-ppt to create a new presentation with this template."
-policy:
-  allow_implicit_invocation: true

@@ -1,0 +1,25 @@
+{
+  "provenance": "New native blue template built from green native PPTX and blue visual reference; no preexisting native blue PPTX source",
+  "reference_sha256": "eaa4318db1dd445d2346d5c42ce55a05e80cf89693aaba5b7aab4fb5f05fe47b",
+  "source_reference": "../shuimu-qinglv/assets/reference.pptx",
+  "source_sha256": "eb1f05e740f5b31dcbb16b9b9f28af53234526bb95859cb97bf78cb3bbd757d8",
+  "source_unchanged": true,
+  "playback_order": [
+    "cover",
+    "toc",
+    "section",
+    "content-blank",
+    "content-image",
+    "ending"
+  ],
+  "native_objects": {
+    "nativeShapes": 31,
+    "nativeTextObjects": 22,
+    "nativeNonTextShapes": 9,
+    "nativePictures": 11,
+    "nativeTables": 0,
+    "nativeCharts": 0
+  },
+  "logo_media_preserved": true,
+  "header_geometry_preserved": true
+}

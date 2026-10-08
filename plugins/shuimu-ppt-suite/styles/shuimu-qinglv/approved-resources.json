@@ -1,0 +1,65 @@
+{
+  "source": "approved-reference.pptx",
+  "source_sha256": "d1d2de21afa0582c75eedcc36172217d46afe6370795b40f0fef14dc670fccea",
+  "assets": {
+    "content-background": {
+      "path": "shuimu-qinglv/assets/content-background.png",
+      "sha256": "e0a8fea96abb194bd0aca41450a1fe534369aea4593278579e1d2c2d8b3d3386",
+      "source_slide": 2,
+      "source_object": "P02-background",
+      "purpose": "decorative",
+      "reuse": "all-content-pages"
+    },
+    "ward-scene": {
+      "path": "shuimu-qinglv/assets/ward-scene.png",
+      "sha256": "6c628671baf23bbe53099bd63d10e0b999155006d3c978fc1fa4e40d1bdaffe9",
+      "source_slide": 6,
+      "source_object": "P06-research-ward",
+      "purpose": "primary",
+      "reuse": "matching-content-only"
+    },
+    "research-scene": {
+      "path": "shuimu-qinglv/assets/research-scene.png",
+      "sha256": "78aa51d7f71b88eb1e7f2261970c0d7a2f6557a0cce46f4ef7339a121a775649",
+      "source_slide": 11,
+      "source_object": "P11-researcher",
+      "purpose": "primary",
+      "reuse": "matching-content-only"
+    },
+    "care-scene": {
+      "path": "shuimu-qinglv/assets/care-scene.png",
+      "sha256": "e0bcb9de9f626421685e78a6687b6871c42fdbffcf9b0eaa3fe7e08ddeb4f632",
+      "source_slide": 12,
+      "source_object": "P12-consent",
+      "purpose": "primary",
+      "reuse": "matching-content-only"
+    }
+  },
+  "cover_objects": [
+    {
+      "source_object": "P01-cover-heading",
+      "example_text": " 2026       应用示范",
+      "text_is_example_only": true,
+      "bbox_emu": "<ns0:xfrm xmlns:ns0=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><ns0:off x=\"343535\" y=\"930910\" /><ns0:ext cx=\"10121265\" cy=\"2109470\" /></ns0:xfrm>"
+    },
+    {
+      "source_object": "P01-template-label",
+      "example_text": "示范医院建设",
+      "text_is_example_only": true,
+      "bbox_emu": "<ns0:xfrm xmlns:ns0=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><ns0:off x=\"170212\" y=\"3822097\" /><ns0:ext cx=\"3037237\" cy=\"398812\" /></ns0:xfrm>"
+    },
+    {
+      "source_object": "P01-title",
+      "example_text": "示范医院建设进展与现场示范方案",
+      "text_is_example_only": true,
+      "bbox_emu": "<ns0:xfrm xmlns:ns0=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><ns0:off x=\"741712\" y=\"4519327\" /><ns0:ext cx=\"10393680\" cy=\"829913\" /></ns0:xfrm>"
+    },
+    {
+      "source_object": "P01-details",
+      "example_text": "清华大学附属北京清华长庚医院 汇报国家重点研发计划“BT/IT生物与信息融合”重点专项2024YFF12070002026年9月22日  北京友谊医院通州院区",
+      "text_is_example_only": true,
+      "bbox_emu": "<ns0:xfrm xmlns:ns0=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><ns0:off x=\"741712\" y=\"5324475\" /><ns0:ext cx=\"6819900\" cy=\"1310640\" /></ns0:xfrm>"
+    }
+  ],
+  "content_note": "Reference copy is for visual/structural reuse only; old wording, dates and data are not new task facts"
+}

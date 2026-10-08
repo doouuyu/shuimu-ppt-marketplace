@@ -1,0 +1,4 @@
+interface:
+  display_name: "纯原生模板 PPT"
+  short_description: "沿用原生封面和标题栏，以可编辑原生内容为主，少量配图点缀"
+  default_prompt: "使用 $native-template-ppt，按我的材料制作 PPT；未指定风格时使用清华长庚绿，保留对应原生封面与标题栏"

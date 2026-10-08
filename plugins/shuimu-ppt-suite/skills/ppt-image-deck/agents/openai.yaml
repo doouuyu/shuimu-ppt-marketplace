@@ -1,0 +1,4 @@
+interface:
+  display_name: "纯图片 PPT"
+  short_description: "Image 生成整页内容，支持复用所选模板的原生封面与标题栏"
+  default_prompt: "使用 $ppt-image-deck，按我的材料制作 PPT；未指定风格时使用清华长庚绿，保留对应原生封面与标题栏"

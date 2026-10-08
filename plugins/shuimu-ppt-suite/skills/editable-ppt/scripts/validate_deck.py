@@ -20,13 +20,11 @@ PLACEHOLDERS = re.compile(
     r'待补充|待完善|待替换|数据待确认|(?:示例|演示|示意|临时)数据|占位(?:图|符|文字)|'
     r'请输入(?:标题|正文|内容)|此处输入|输入修改文字|添加标题文本|'
     r'您的内容打在这里|在这里输入你的|单击此处|某某某|XXX|\b(?:TBD|TODO|LOREM IPSUM)\b', re.I)
-NATIVE_PROFILES = {
-    'aihia': ('aihia', {'cover': [1], 'toc': [3], 'section': [4],
-                        'content': [6], 'ending': [14]}),
-    'shuimu-qinglv': ('artifact-template-shuimu-qinglv-ppt', {
-        'cover': [1], 'toc': [2], 'section': [3, 6, 9],
-        'content': [4, 5, 7, 8, 10, 11], 'ending': [12]}),
-}
+PLUGIN_ROOT = Path(__file__).resolve().parents[3]
+STYLE_CATALOG = {item['id']: item for item in json.loads(
+    (PLUGIN_ROOT / 'styles/catalog.json').read_text(encoding='utf-8'))['styles']}
+NATIVE_PROFILES = {key: item for key, item in STYLE_CATALOG.items()
+                   if item['reference_kind'] == 'native-template'}
 
 
 def text_values(value):
@@ -50,20 +48,35 @@ def check_style(plan, base):
         errors.append('像素答辩只允许用户明确选择，不能作为可编辑流程默认风格')
     if profile in NATIVE_PROFILES and kind != 'native-template':
         errors.append(f'{profile}: 必须复用原生模板，不能降级为仅借用配色')
-    if kind == 'none' and profile not in ('neutral', 'custom'):
+    if kind == 'none' and profile not in ('neutral', 'custom') and STYLE_CATALOG.get(profile, {}).get('reference_kind') != 'none':
         errors.append(f'{profile}: 指定风格必须关联实际参考文件')
     if kind == 'none':
         return errors
     reference = base / style.get('reference_path', '')
     if not reference.is_file():
         return errors + ['style.reference_path 必须指向实际参考文件']
+    candidates = {}
     if profile in NATIVE_PROFILES:
-        folder, roles = NATIVE_PROFILES[profile]
-        original = Path(__file__).resolve().parents[2] / folder / 'assets/reference.pptx'
-        if hashlib.sha256(reference.read_bytes()).digest() != hashlib.sha256(original.read_bytes()).digest():
-            errors.append(f'{profile}: reference_path 与套件保留原模板不一致')
-    else:
-        roles = None
+        item = NATIVE_PROFILES[profile]
+        for key, role_key in [('reference', 'roles'), ('composition_reference', 'composition_roles')]:
+            if key in item:
+                original = PLUGIN_ROOT / 'styles' / item[key]
+                if original.is_file():
+                    candidates[hashlib.sha256(original.read_bytes()).digest()] = item[role_key]
+        if not candidates:
+            return errors + [f'{profile}: 已有源件不可读，请定位实际资源或在当前稿按需适配']
+    checked = {}
+
+    def source_roles(path):
+        key = str(path.resolve())
+        if key not in checked:
+            digest = hashlib.sha256(path.read_bytes()).digest()
+            checked[key] = candidates.get(digest)
+            if candidates and checked[key] is None:
+                errors.append(f'{profile}: reference_path 与登记的原生/已认可参考不一致')
+        return checked[key]
+
+    roles = source_roles(reference) if candidates else None
     for slide in plan.get('slides', []):
         sid = slide.get('id')
         source = slide.get('template_source', {})
@@ -71,10 +84,18 @@ def check_style(plan, base):
             if not slide.get('reference_anchor'):
                 errors.append(f'{sid}: 图片参考必须记录 reference_anchor，不能假称复制原生模板')
             continue
+        local_reference = source.get('reference_path')
+        local_roles = roles
+        if local_reference:
+            path = base / local_reference
+            if not path.is_file():
+                errors.append(f'{sid}: 逐页 template_source.reference_path 不可读')
+            elif candidates:
+                local_roles = source_roles(path)
         page, mode = source.get('slide'), source.get('mode')
         if not isinstance(page, int) or isinstance(page, bool) or page < 1:
             errors.append(f'{sid}: 缺少 template_source.slide 原模板页码')
-        if roles and page not in roles.get(slide.get('role'), []):
+        if local_roles and page not in local_roles.get(slide.get('role'), []):
             errors.append(f'{sid}: 源页不符合 {profile} 的 {slide.get("role")} 页面角色')
         allowed = ('duplicate-slide', 'reuse-header') if slide.get('role') == 'content' else ('duplicate-slide',)
         if mode not in allowed:
@@ -88,12 +109,22 @@ def check_style(plan, base):
 def check_delivery(plan, base, require_assets):
     errors = check_style(plan, base)
     generated = set()
+    reusable_visuals = set()
     for asset in plan.get('assets', []):
+        if asset.get('source') == 'style':
+            entry = STYLE_CATALOG.get(plan.get('style', {}).get('id'), {}).get('design_assets', {}).get(asset.get('bundle_key'))
+            if not entry:
+                errors.append(f'{asset.get("id")}: 风格素材 bundle_key 未登记')
+            else:
+                path = base / asset.get('path', '')
+                if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != entry['sha256']:
+                    errors.append(f'{asset.get("id")}: 复用素材与风格包原图不一致')
+                else:
+                    reusable_visuals.add(asset.get('id'))
         if asset.get('source') != 'generated':
             continue
         aid = asset.get('id')
-        if asset.get('purpose') == 'decorative':
-            generated.add(aid)
+        generated.add(aid)
         if not asset.get('prompt') or asset.get('status') not in ('planned', 'generated', 'accepted'):
             errors.append(f'{aid}: 生成素材必须记录 prompt 与 status')
         if require_assets:
@@ -112,8 +143,33 @@ def check_delivery(plan, base, require_assets):
     for slide in plan.get('slides', []):
         images = [e for e in slide.get('elements', []) if e.get('type') == 'image']
         used.update(e.get('asset_id') for e in images)
-        if slide.get('role') == 'content' and not images:
-            errors.append(f'{slide.get("id")}: 正文页必须设计并放置图片素材，不能全用文字方块')
+        if slide.get('role') == 'content':
+            visual = slide.get('visual', {})
+            strategy = visual.get('strategy')
+            if strategy == 'primary-image':
+                aid = visual.get('primary_asset_id')
+                asset = next((a for a in plan.get('assets', []) if a.get('id') == aid), {})
+                if not aid or aid not in {e.get('asset_id') for e in images}:
+                    errors.append(f'{slide.get("id")}: 正文主图必须实际引用到本页')
+                if asset.get('purpose') != 'primary' or asset.get('kind') in ('decoration', 'background', 'logo', 'icon'):
+                    errors.append(f'{slide.get("id")}: 背景/Logo/小装饰不能代替语义主图')
+                if not visual.get('relationship'):
+                    errors.append(f'{slide.get("id")}: 须说明主图与本页内容的关系')
+            elif strategy == 'native-figure':
+                ids = visual.get('element_ids', [])
+                meaningful = {e.get('id') for e in slide.get('elements', [])
+                              if e.get('type') in ('table', 'chart', 'connector') or
+                              (e.get('type') == 'shape' and e.get('purpose') == 'diagram')}
+                if not visual.get('reason') or not ids or not set(ids).issubset(meaningful):
+                    errors.append(f'{slide.get("id")}: 原生主图须有实际图表/关系图对象及选择理由')
+            elif strategy == 'text-only':
+                if not visual.get('reason') or slide.get('page_task') not in ('quotation', 'statement'):
+                    errors.append(f'{slide.get("id")}: 纯文字只用于有明确理由的金句/陈述页')
+            elif strategy == 'native-content':
+                if not visual.get('reason') or not any(e.get('type') in ('text', 'table', 'chart', 'shape', 'connector') for e in slide.get('elements', [])):
+                    errors.append(f'{slide.get("id")}: 原生内容页须有内容与版式理由')
+            else:
+                errors.append(f'{slide.get("id")}: 正文页须声明 visual 主图策略，不能用有图片标签替代配图设计')
         for element in slide.get('elements', []):
             eid = element.get('id')
             for field in ('text', 'runs', 'rows', 'categories', 'series', 'title', 'labels'):
@@ -127,12 +183,58 @@ def check_delivery(plan, base, require_assets):
                 purpose = element.get('purpose')
                 if purpose not in ('template', 'background', 'separator', 'diagram', 'content-panel'):
                     errors.append(f'{eid}: shape 必须声明用途，不能把程序图形当装饰素材')
-                if purpose == 'content-panel' and element.get('geometry') == 'rect' and plan.get('style', {}).get('id') != 'pixel-defense-academic-ppt':
-                    errors.append(f'{eid}: 非像素答辩风不用直角内容方块，优先开放布局或克制圆角')
                 if purpose == 'template' and not slide.get('template_source'):
                     errors.append(f'{eid}: 声称继承模板对象却没有 template_source')
-    if not (generated & used):
-        errors.append('必须先生成并实际使用至少一项装饰图片素材，不允许跳过素材生成')
+    if not ((generated | reusable_visuals) & used):
+        errors.append('图文混排须实际使用生成素材或已验收的风格素材，Logo不计入')
+    if plan.get('design_contract_version') == 2:
+        errors.extend(check_design_contract(plan))
+    return errors
+
+
+def check_design_contract(plan):
+    """Check planned scope, shared decoration and cover slots before generating assets."""
+    errors = []
+    slides = plan.get('slides', [])
+    scope = plan.get('scope', {}).get('source_page_ids')
+    source_ids = [s.get('source_page_id') for s in slides]
+    if not isinstance(scope, list) or not scope or not all(isinstance(x, str) for x in scope) or scope != source_ids or len(set(scope)) != len(scope):
+        errors.append('scope.source_page_ids 须与本次逐页 source_page_id 完全对应，不能补页或漏页')
+    style = plan.get('style', {})
+    bundled = STYLE_CATALOG.get(style.get('id'), {})
+    assets = {a.get('id'): a for a in plan.get('assets', [])}
+    for slide in slides:
+        sid = slide.get('id')
+        elements = {e.get('id'): e for e in slide.get('elements', [])}
+        if slide.get('role') == 'content':
+            override = style.get('decoration_override', {})
+            if style.get('decoration_mode') == 'none':
+                if override.get('source') != 'user_message' or not override.get('quote'):
+                    errors.append(f'{sid}: 取消所选风格的装饰层须记录用户明确要求')
+                continue
+            aid = slide.get('decoration_asset_id')
+            asset = assets.get(aid, {})
+            if not aid or asset.get('purpose') != 'decorative' or not any(e.get('type') == 'image' and e.get('asset_id') == aid for e in elements.values()):
+                errors.append(f'{sid}: 缺少实际使用的统一装饰层，主体图不能替代装饰背景')
+            expected = bundled.get('default_decoration')
+            if expected and (asset.get('source') != 'style' or asset.get('bundle_key') != expected):
+                errors.append(f'{sid}: 默认须复用已认可的风格装饰素材')
+            if expected:
+                canvas = plan.get('canvas', {})
+                expected_box = [0, 0, canvas.get('width'), canvas.get('height')]
+                instances = [e for e in elements.values() if e.get('type') == 'image' and e.get('asset_id') == aid]
+                if not any(e.get('box') == expected_box and e.get('opacity', 1) == 1 for e in instances):
+                    errors.append(f'{sid}: 统一背景须按整页画布放置，不能缩成小角标或隐藏')
+        if slide.get('role') == 'cover':
+            slots = slide.get('cover_slots', {})
+            required = bundled.get('cover_required_slots', ['title'])
+            ids = [slots.get(name) for name in required]
+            if len(ids) != len(set(ids)):
+                errors.append(f'{sid}: 主题大字与报告标题须分别映射，不能用同一对象冒充两个文字槽')
+            for name, eid in zip(required, ids):
+                element = elements.get(eid, {})
+                if element.get('type') != 'text' or not element.get('text', '').strip():
+                    errors.append(f'{sid}: 封面 {name} 文字槽未落实到实际原生文本')
     return errors
 
 
@@ -190,8 +292,8 @@ def check_projection(plan):
     """Check the selected reading context; ordinary screen reading is the default."""
     profile = plan.get('readability_profile', 'screen')
     profiles = {
-        'screen': {'cover_title': 36, 'title': 28, 'subtitle': 24, 'body': 18, 'label': 18, 'footnote': 14},
-        'projection': {'cover_title': 42, 'title': 34, 'subtitle': 28, 'body': 22, 'label': 20, 'footnote': 18},
+        'screen': {'cover_title': 36, 'title': 28, 'subtitle': 24, 'body': 18, 'label': 18, 'footnote': 14, 'metric': 24},
+        'projection': {'cover_title': 42, 'title': 34, 'subtitle': 28, 'body': 22, 'label': 20, 'footnote': 18, 'metric': 28},
     }
     if not isinstance(profile, str) or profile not in profiles:
         return ['readability_profile 必须为 screen 或 projection']
@@ -205,6 +307,8 @@ def check_projection(plan):
             if kind not in ('text', 'table', 'chart'):
                 continue
             default_role = text_role(element, slide)
+            if default_role == 'metric' and (kind != 'text' or not re.search(r'\d', element.get('text', '')) or len(element.get('text', '')) > 28):
+                errors.append(f'{eid}: metric 仅用于简短关键数字，不能用于普通正文绕过层级检查')
             if default_role == 'subtitle' and element.get('text_role', 'subtitle') != 'subtitle':
                 errors.append(f'{eid}: 页面副标题必须使用 subtitle 角色，不能标成正文或脚注')
             base = dict(element)
@@ -243,8 +347,10 @@ def check_projection(plan):
                 if profile == 'projection' and max(foreground) > 24 and min(foreground) < 245 and max(foreground) - min(foreground) <= 40:
                     errors.append(f'{eid}: 不使用灰色/灰蓝文字，改黑色、深品牌色或深底白字')
                 light, dark = sorted((luminance(foreground), luminance(background)), reverse=True)
-                if (light + .05) / (dark + .05) < 4.5:
-                    errors.append(f'{eid}: 文字与背景对比不足 4.5:1')
+                large = number(size) and (size >= 24 * scale or (size >= 18 * scale and style.get('bold') is True))
+                contrast_floor = 3.0 if large else 4.5
+                if (light + .05) / (dark + .05) < contrast_floor:
+                    errors.append(f'{eid}: 文字与实际背景对比不足 {contrast_floor:g}:1')
         if tiers['subtitle']:
             titles = tiers['title'] + tiers['cover_title']
             body = tiers['body'] + tiers['label']
@@ -485,6 +591,9 @@ def main():
     try:
         plan = json.loads(args.plan.read_text(encoding='utf-8'))
         errors = validate_plan(plan, args.plan.parent, args.require_assets)
+        if args.require_assets or args.pptx:
+            from design_snapshot import verify_snapshot
+            errors.extend(verify_snapshot(args.plan))
         if args.pptx and not errors:
             errors.extend(audit_pptx(plan, args.pptx))
     except (OSError, ValueError, KeyError, TypeError, AttributeError, zipfile.BadZipFile, ET.ParseError) as exc:

@@ -1,4 +1,4 @@
 interface:
-  display_name: "可编辑 PPT 风格"
-  short_description: "锁定指定模板原页，先生成装饰素材，再按详细排版组装原生可编辑 PPT"
-  default_prompt: "使用 $editable-ppt，复用我指定模板的封面、过渡页与标题栏，先完成逐页设计、素材设计和详细排版，再生成无字装饰素材并组装可编辑 PPT；正式页面不留占位内容。"
+  display_name: "图文混排 PPT"
+  short_description: "先设计后生图，复用原生模板和科技装饰，文字数据可编辑并保留检查"
+  default_prompt: "使用 $editable-ppt，先完成本次范围的设计文档，再按设计准备图片和组装；默认清华长庚绿原生封面、标题栏和统一科技背景，保留检查"

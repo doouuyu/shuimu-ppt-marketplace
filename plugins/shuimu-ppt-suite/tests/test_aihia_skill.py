@@ -1,64 +1,42 @@
 import hashlib
+import importlib.util
 import json
 import unittest
 import zipfile
 from pathlib import Path
+ROOT = Path(__file__).resolve().parents[1]
+SID = 'aihia'
+EXPECTED_HASH = 'ddddf2f5ea374d294654d8dc6cc908aaba7ac49c2d13e518b86f35cad72ce972'
 
+class ReusableStyleTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        spec=importlib.util.spec_from_file_location('selection_'+SID, ROOT/'shared/resolve_selection.py')
+        cls.resolver=importlib.util.module_from_spec(spec);spec.loader.exec_module(cls.resolver)
+        cls.style=next(s for s in json.loads((ROOT/'styles/catalog.json').read_text())['styles'] if s['id']==SID)
 
-PLUGIN_ROOT = Path(__file__).resolve().parents[1]
-SKILL_ROOT = PLUGIN_ROOT / "skills" / "aihia"
-REFERENCE = SKILL_ROOT / "assets" / "reference.pptx"
-EXPECTED_REFERENCE_SHA256 = "ddddf2f5ea374d294654d8dc6cc908aaba7ac49c2d13e518b86f35cad72ce972"
+    def test_every_production_mode_can_select_this_style(self):
+        for mode in ('editable-ppt','ppt-image-deck','native-template-ppt'):
+            choice=self.resolver.resolve(mode, self.style['name'])
+            self.assertEqual(mode,choice['workflow'])
+            self.assertEqual(SID,choice['style']['id'])
 
+    def test_alias_selects_resource_without_changing_mode(self):
+        for alias in self.style.get('aliases',[]):
+            choice=self.resolver.resolve(style=alias)
+            self.assertEqual('editable-ppt',choice['workflow'])
+            self.assertEqual(SID,choice['style']['id'])
 
-class AihiaSkillContractTest(unittest.TestCase):
-    def test_skill_declares_exact_requested_name(self):
-        text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("name: aihia", text)
+    def test_retained_reference_and_guide_are_real(self):
+        self.assertTrue((ROOT/'styles'/self.style['guide']).is_file())
+        if 'reference' in self.style:
+            ref=ROOT/'styles'/self.style['reference']
+            self.assertTrue(ref.is_file())
+            if ref.suffix=='.pptx':
+                with zipfile.ZipFile(ref) as archive:self.assertIn('ppt/presentation.xml',archive.namelist())
+        if EXPECTED_HASH:
+            filename='visual_reference' if SID=='qinghua-changgung-blue' else 'reference'
+            ref=ROOT/'styles'/self.style[filename]
+            self.assertEqual(EXPECTED_HASH,hashlib.sha256(ref.read_bytes()).hexdigest())
 
-    def test_retained_reference_is_exact_source_copy(self):
-        digest = hashlib.sha256(REFERENCE.read_bytes()).hexdigest()
-        self.assertEqual(EXPECTED_REFERENCE_SHA256, digest)
-
-    def test_reference_contains_native_cover_source(self):
-        with zipfile.ZipFile(REFERENCE) as deck:
-            slide_xml = deck.read("ppt/slides/slide1.xml").decode("utf-8")
-        self.assertIn("超级AI医院运营方案", slide_xml)
-
-    def test_reference_contains_native_header_source(self):
-        with zipfile.ZipFile(REFERENCE) as deck:
-            slide_xml = deck.read("ppt/slides/slide6.xml").decode("utf-8")
-        required = ('name="AutoShape 19"', 'name="AutoShape 20"', 'name="Picture 21"')
-        self.assertTrue(all(marker in slide_xml for marker in required))
-
-    def test_builder_supports_native_cover_and_content_roles(self):
-        text = (SKILL_ROOT / "scripts" / "build_aihia_deck.mjs").read_text(encoding="utf-8")
-        self.assertTrue('role === "cover"' in text and 'role === "content"' in text)
-
-    def test_cover_builder_keeps_only_the_visible_native_field_set(self):
-        text = (SKILL_ROOT / "scripts" / "build_aihia_deck.mjs").read_text(encoding="utf-8")
-        required = (
-            'shape.name === "AutoShape 8"',
-            'shape.name === "AutoShape 9"',
-            'shape.name === "AutoShape 10"',
-            'image.name === "Picture 6"',
-            'image.name === "Picture 7"',
-        )
-        self.assertTrue(all(marker in text for marker in required))
-
-    def test_style_guide_records_template_palette_and_safe_area(self):
-        text = (SKILL_ROOT / "references" / "template-guide.md").read_text(encoding="utf-8")
-        required = ("#694CD5", "#6F34A7", "顶部 0—240 px", "第 1 页", "第 6 页")
-        self.assertTrue(all(term in text for term in required))
-
-    def test_router_selects_aihia_before_generic_image_deck(self):
-        text = (PLUGIN_ROOT / "skills" / "shuimu-ppt" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertLess(text.index("$aihia"), text.index("$ppt-image-deck"))
-
-    def test_plugin_manifest_lists_nine_workflows(self):
-        manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
-        self.assertIn("九种水木 PPT 工作流", manifest["interface"]["shortDescription"])
-
-
-if __name__ == "__main__":
-    unittest.main()
+if __name__=='__main__':unittest.main()

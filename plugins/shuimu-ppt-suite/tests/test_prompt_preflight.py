@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PATH = ROOT / 'skills/pixel-defense-academic-ppt/scripts/check_prompts.py'
+PATH = ROOT / 'skills/ppt-image-deck/scripts/check_pixel_prompts.py'
 
 
 class PromptPreflightTest(unittest.TestCase):

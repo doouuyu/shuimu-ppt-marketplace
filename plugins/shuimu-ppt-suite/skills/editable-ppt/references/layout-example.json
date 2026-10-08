@@ -1,13 +1,31 @@
 {
   "workflow": "editable-ppt",
   "readability_profile": "screen",
-  "canvas": {"width": 1280, "height": 720, "unit": "px"},
-  "style": {"id": "neutral", "reference_kind": "none", "explicitly_requested": false},
-  "assets": [{
-    "id": "A001", "path": "../assets/A001.png", "kind": "decoration",
-    "source": "generated", "purpose": "decorative", "text_free": true, "status": "planned",
-    "prompt": "生成无字柔和蓝色数据波纹装饰，横向2:1，主体居右，白底，大量留白。无数字、字母、Logo或图表，不生成幻灯片。"
-  }],
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "unit": "px"
+  },
+  "style": {
+    "id": "shuimu-qinglv",
+    "reference_kind": "native-template",
+    "reference_path": "../../../styles/shuimu-qinglv/assets/reference.pptx",
+    "explicitly_requested": false
+  },
+  "assets": [
+    {
+      "id": "D001",
+      "path": "../../../styles/shuimu-qinglv/assets/content-background.png",
+      "kind": "background",
+      "source": "style",
+      "bundle_key": "content-background",
+      "purpose": "decorative",
+      "text_free": true,
+      "status": "accepted",
+      "width_px": 1672,
+      "height_px": 941
+    }
+  ],
   "slides": [
     {
       "id": "P01",
@@ -16,40 +34,191 @@
       "notes": "结构示例，字体在生成时按实际可用字体替换。",
       "elements": [
         {
-          "id": "P01-title", "type": "text", "box": [48, 32, 1184, 76], "z": 2,
-          "text": "可编辑对象与修改方式", "font_family": "Microsoft YaHei", "font_size_pt": 34, "text_role": "title",
-          "bold": true, "color": "#10367D", "align": "left", "valign": "middle",
-          "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0,
+          "id": "P01-shared-background",
+          "type": "image",
+          "asset_id": "D001",
+          "box": [
+            0,
+            0,
+            1280,
+            720
+          ],
+          "z": -10,
+          "fit": "contain"
+        },
+        {
+          "id": "P01-title",
+          "type": "text",
+          "box": [
+            48,
+            32,
+            1184,
+            76
+          ],
+          "z": 2,
+          "text": "可编辑对象与修改方式",
+          "font_family": "Microsoft YaHei",
+          "font_size_pt": 34,
+          "text_role": "title",
+          "bold": true,
+          "color": "#2C7175",
+          "align": "left",
+          "valign": "middle",
+          "margin_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_spacing": 1.15,
+          "paragraph_after_pt": 0,
           "max_lines": 1
         },
         {
-          "id": "P01-subtitle", "type": "text", "box": [48, 122, 1184, 64], "z": 2,
+          "id": "P01-subtitle",
+          "type": "text",
+          "box": [
+            48,
+            122,
+            1184,
+            64
+          ],
+          "z": 2,
           "text": "文字与数据通过原生对象编辑，图片按需替换",
-          "font_family": "Microsoft YaHei", "font_size_pt": 26, "text_role": "subtitle",
-          "bold": true, "color": "#10367D", "align": "left", "valign": "top",
-          "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
+          "font_family": "Microsoft YaHei",
+          "font_size_pt": 26,
+          "text_role": "subtitle",
+          "bold": true,
+          "color": "#2C7175",
+          "align": "left",
+          "valign": "top",
+          "margin_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_spacing": 1.15,
+          "paragraph_after_pt": 0
         },
         {
-          "id": "P01-table", "type": "table", "box": [48, 212, 1184, 320], "z": 2,
-          "font_family": "Microsoft YaHei", "font_size_pt": 20, "text_role": "label", "bold": true,
-          "rows": [["对象", "原生类型", "修改方式"], ["标题与正文", "文本框", "修改文字"], ["表格与图表", "表格或图表", "修改数据"], ["照片与插图", "图片素材", "替换文件"]],
-          "column_widths": [320, 384, 480], "row_heights": [80, 80, 80, 80],
-          "header_fill": "#10367D", "header_color": "#FFFFFF",
-          "alternate_fill": "#EAF2FA", "body_fill": "#FFFFFF", "body_color": "#111111",
-          "column_align": ["left", "left", "left"], "cell_margin_px": [12, 18, 12, 18]
+          "id": "P01-table",
+          "type": "table",
+          "box": [
+            48,
+            212,
+            1184,
+            320
+          ],
+          "z": 2,
+          "font_family": "Microsoft YaHei",
+          "font_size_pt": 20,
+          "text_role": "label",
+          "bold": true,
+          "rows": [
+            [
+              "对象",
+              "原生类型",
+              "修改方式"
+            ],
+            [
+              "标题与正文",
+              "文本框",
+              "修改文字"
+            ],
+            [
+              "表格与图表",
+              "表格或图表",
+              "修改数据"
+            ],
+            [
+              "照片与插图",
+              "图片素材",
+              "替换文件"
+            ]
+          ],
+          "column_widths": [
+            320,
+            384,
+            480
+          ],
+          "row_heights": [
+            80,
+            80,
+            80,
+            80
+          ],
+          "header_fill": "#2C7175",
+          "header_color": "#FFFFFF",
+          "alternate_fill": "#EEF6F2",
+          "body_fill": "#FFFFFF",
+          "body_color": "#111111",
+          "column_align": [
+            "left",
+            "left",
+            "left"
+          ],
+          "cell_margin_px": [
+            12,
+            18,
+            12,
+            18
+          ]
         },
         {
-          "id": "P01-note", "type": "text", "box": [48, 578, 820, 64], "z": 2,
-          "text": "照片、插图和截图内部仍为位图。",
-          "font_family": "Microsoft YaHei", "font_size_pt": 18, "text_role": "footnote",
-          "bold": true, "color": "#111111", "align": "left", "valign": "top",
-          "margin_px": [0, 0, 0, 0], "line_spacing": 1.15, "paragraph_after_pt": 0
-        },
-        {
-          "id": "P01-decoration", "type": "image", "box": [924, 566, 300, 150],
-          "z": 1, "asset_id": "A001", "fit": "contain"
+          "id": "P01-note",
+          "type": "text",
+          "box": [
+            48,
+            578,
+            820,
+            64
+          ],
+          "z": 2,
+          "text": "照片、插图和截图内部仍为位图",
+          "font_family": "Microsoft YaHei",
+          "font_size_pt": 18,
+          "text_role": "footnote",
+          "bold": true,
+          "color": "#111111",
+          "align": "left",
+          "valign": "top",
+          "margin_px": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_spacing": 1.15,
+          "paragraph_after_pt": 0
         }
-      ]
+      ],
+      "template_source": {
+        "slide": 4,
+        "mode": "reuse-header",
+        "preserve": [
+          "theme",
+          "layout",
+          "background",
+          "logo",
+          "title-style"
+        ]
+      },
+      "visual": {
+        "strategy": "native-figure",
+        "element_ids": [
+          "P01-table"
+        ],
+        "reason": "本页以真实对象类型对照表为主要信息，配图只作局部点缀"
+      },
+      "source_page_id": "P01",
+      "decoration_asset_id": "D001"
     }
-  ]
+  ],
+  "design_contract_version": 2,
+  "scope": {
+    "source_page_ids": [
+      "P01"
+    ]
+  }
 }

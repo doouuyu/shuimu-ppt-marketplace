@@ -13,9 +13,9 @@ def minimal_plan():
     return {
         'workflow': 'editable-ppt', 'canvas': {'width': 1280, 'height': 720, 'unit': 'px'},
         'style': {'id': 'neutral', 'reference_kind': 'none', 'explicitly_requested': False},
-        'assets': [{'id': 'A01', 'path': 'a.png', 'kind': 'decoration', 'source': 'generated',
-                    'purpose': 'decorative', 'text_free': True, 'prompt': '无字柔和波纹', 'status': 'planned'}],
-        'slides': [{'id': 'P01', 'role': 'content', 'elements': [{
+        'assets': [{'id': 'A01', 'path': 'a.png', 'kind': 'scene', 'source': 'generated',
+                    'purpose': 'primary', 'text_free': True, 'prompt': '无字柔和波纹', 'status': 'planned'}],
+        'slides': [{'id': 'P01', 'role': 'content', 'visual': {'strategy':'primary-image', 'primary_asset_id':'A01', 'relationship':'与本页主题对应的医学研究场景'}, 'elements': [{
             'id': 'P01-title', 'type': 'text', 'box': [48, 32, 1150, 72], 'z': 2,
             'text': '可编辑标题', 'font_family': 'Arial', 'font_size_pt': 36,
             'bold': True, 'color': '#10367D', 'align': 'left', 'valign': 'middle',
