@@ -1,15 +1,15 @@
 {
   "name": "shuimu-ppt-suite",
-  "version": "0.2.1+codex.20261003",
-  "description": "三种PPT流程与独立风格资源，默认青绿图文混排；先完成设计再生图和组装，复用科技装饰，保留检查",
+  "version": "0.2.2+codex.20261009",
+  "description": "三种PPT流程与独立风格资源；按内容设计背景、容器和图文关系，再选择原生或Image制作",
   "author": {
     "name": "doouu"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "水木 PPT 套件 · Shuimu PPT Suite",
-    "shortDescription": "三种制作流程，设计先行，默认青绿图文混排与统一科技装饰",
-    "longDescription": "纯图片、图文混排和纯原生模板三种流程，风格独立选择。默认清华长庚绿，复用已认可的原生封面、标题栏及统一科技装饰背景。先完成设计文档、布局与素材提示词，再按设计准备图片和组装；颜色需求不触发额外模板建设，检查与局部修复仍保留。",
+    "shortDescription": "内容驱动的图文设计，原生与Image按需分工，保留编辑能力",
+    "longDescription": "纯图片、图文混排、纯原生模板三种流程，默认清华长庚绿。图文混排先设计模块外观、文字容量、背景与图文融合，再选择原生、Image或混合制作。支持生成容器与点缀，真实照片限制按素材用途执行，新任务采用v3设计与编辑性检查。",
     "developerName": "doouu",
     "category": "Productivity",
     "capabilities": [

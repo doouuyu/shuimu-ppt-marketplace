@@ -1,4 +1,4 @@
 interface:
   display_name: "图文混排 PPT"
-  short_description: "先设计后生图，复用原生模板和科技装饰，文字数据可编辑并保留检查"
-  default_prompt: "使用 $editable-ppt，先完成本次范围的设计文档，再按设计准备图片和组装；默认清华长庚绿原生封面、标题栏和统一科技背景，保留检查"
+  short_description: "按内容设计背景与容器，选择原生、Image或混合制作，保留文字编辑能力"
+  default_prompt: "使用 $editable-ppt，先根据内容设计整页背景、容器和图文关系，再选择原生、Image或混合制作；文字数据可编辑，默认清华长庚绿"

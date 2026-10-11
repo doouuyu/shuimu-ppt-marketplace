@@ -1,34 +1,30 @@
-# 新任务设计约定（v2）
+# 新任务设计约定（v3）
 
-生图前保存完整设计文档和layout.json，运行design_snapshot.py freeze。组装读取此文件，禁止结束后才反向生成清单。
-新增字段：
+新建图文混排任务使用design_contract_version=3。先形成内容与视觉决策，再展开元素和素材，正式素材生成前冻结设计。旧v2可验证并沿已有快照续作，检查输出明确标记兼容，不自动迁移或补造设计。
 
-```json
-{
-  "design_contract_version": 2,
-  "scope": {"source_page_ids": ["P01", "P02"]},
-  "slides": [
-    {"id":"P01","source_page_id":"P01","role":"cover","cover_slots":{"hero":"P01-hero","title":"P01-title"}},
-    {"id":"P02","source_page_id":"P02","role":"content","decoration_asset_id":"D001","visual":{"strategy":"native-content","reason":"原生事项与流程配合统一科技背景"}}
-  ]
-}
-```
+## 整页与模块设计接口
 
-上述仅展示新增字段，完整计划还需下面的元素、字体、数据及素材字段。页范围来自当前请求，不把示例两页或前20页设为全局默认。
-`source=style` 的素材携带 bundle_key，路径指向已复制到任务的真实文件，校验器与风格包哈希核对。
-默认背景素材须按完整画布 [0,0,width,height] 放置、opacity=1，PNG自己的透明区保持；不能缩成微小角标。
-需要取消装饰时记录 style.decoration_mode=none 与 decoration_override:{source:user_message,quote:用户原话}，不得自行取消。
-封面 hero/title 对应两个不同的原生文本对象。多源页参考用 template_source.reference_path 指定实际文件。
+每页visual_design包含：
+- focus：作为视觉重点的模块ID
+- reading_order：内容模块ID列表，顺序不重复，包含focus；纯装饰模块不必进入阅读顺序
+- background：render_method（native/image/hybrid）、appearance、decision_reason、element_ids；背景只认领图片和图形；原生页面底色可使用空element_ids并设置slide.background
+- modules：每项id、purpose、appearance、render_method、decision_reason、element_ids、text_region_ids
 
-接收生图结果可更新 status、width_px、height_px、generated_path、generation_record、actual_sha256、reviewed_at、accepted_at。改动文案/提示词/几何/层级，须先同步Markdown再用 freeze --revise 原因 更新快照。
+appearance应说明轮廓、边缘、材质/明暗、留白及融合，decision_reason说明为何该方案适合文字量、精确性、修改需求与视觉复杂度。坐标不能代替这些判断。
+所有非模板保护元素须归入背景或一个模块，同一元素不重复归属。原生模块不含图片，image模块只含图片，hybrid模块同时含图片与原生对象。模块中的文字、表格和图表用region_id关联composition.regions，其区域ID列入模块text_region_ids。
+
+素材usage_role为evidence/illustration/decoration/container。真实记录evidence不得source=generated，须记录source_url或source_path；其他用途可生成。每项素材记录crop_policy，说明裁切/伸缩范围。
+container额外记录aspect_ratio（计划宽高比）和text_safe_regions（一个或多个归一化[x,y,w,h]，范围0到1）。素材框与承载的原生文字归属同一hybrid模块。图像到位后可记录actual_text_safe_regions，表示人工查看得到的实际安全区，不改写原提示词。框体完整contain放置，不裁切；文字须落在其实际安全区。校验按实际图片尺寸计算contain后的留白偏移，生成比例变化后须校准布局，不拉伸硬套。
+
+构图记录与准确文案、图片提示词写入同一设计文档；与layout.json一起冻结。生成结果更新状态、尺寸和来源；改变设计或几何须先同步文档，再freeze --revise。
+背景可用原生、图片或混合，不以“一张全页生成背景”作为混排通行条件；用户明确指定的模板背景与品牌对象继续保留。
 
 # layout.json 约定
 
 此清单是逐对象组装的输入，不是某个 PPT API 的直接参数。构建器按当前官方本地 API 映射这些值。
 校验工具使用 Python 标准库，不安装依赖；它只读取输入文件。
 
-完整单页示例见 `layout-example.json`，包含原生标题、正文、表格和注释，可作为字段起点，不能把示例
-内容当成用户材料。该例复用已验收的青绿装饰背景，展示原生表格页不需要额外生成一张主图。
+`layout-example.json` 保留为旧v2兼容示例，不是新任务设计起点。新任务按上方v3规则独立设计，不套用该示例的内容或版式。
 
 ## 顶层与素材
 
@@ -52,8 +48,8 @@ style 必填，不得隐式选择像素答辩。样式按输入框明确要求 �
 
 素材项：`id, path, kind, source, text_free`。path 相对于 layout.json 所在目录，如 `../assets/A001.png`。
 source 为 generated/user/external/template/style；生成项必须 `text_free: true`、完整 prompt 和 status。
-使用生成素材或已验收风格素材。正文 visual 可为 primary-image、native-figure、native-content 或 text-only；按内容决定，不默认每页主图。装饰用 decoration_asset_id 单独登记，不能漏掉整套装饰层。
-这些只是声明，仍须看图核实。正式构建要求 status=accepted 和实际 width_px/height_px。
+使用生成素材或已验收风格素材。正文 visual 可为 primary-image、native-figure、native-content 或 text-only；按内容决定，不默认每页主图。v2装饰用decoration_asset_id登记；v3背景按visual_design.background记录。
+v3中旧visual.strategy仅为兼容字段，不代替visual_design。正式构建要求生成素材status=accepted及实际width_px/height_px，仍须看图核实。
 外部资产写 `source_url`，生成素材记录 `prompt`，已有实物记录 `width_px/height_px`。
 
 ## 每页与所有元素
@@ -85,10 +81,10 @@ type 支持 text/image/shape/connector/table/chart。无论元素是否在组内
 presentations 文档为准。支持 `runs` 记录局部强调；text 仍需是全部 runs 的合并文字，以便核对。
 
 所有文字（含表格/图表）按 projection-readability.md 中选定的阅读场景检查，默认 screen；仅明确远距离投影时选择 projection。screen 不要求全部加粗，也不禁止对比度合格的深灰文字。
-text_role 取 cover_title/title/subtitle/body/label/footnote/metric；metric 仅用于简短关键数字，不参与副标题与普通正文的比较；漏写时普通文字按 body、表格/图表按 label，
+text_role 取 cover_title/title/subtitle/section_title/body/label/node_title/support/footnote/metric；metric 仅用于简短关键数字，不参与副标题与普通正文的比较；漏写时普通文字按 body、表格/图表按 label，
 ID 以 -title 结尾按标题检查，以 -subtitle 结尾按副标题检查。页面副标题必须用 subtitle，不能标成 body/footnote。
-同页主标题、副标题、正文/标签之间至少各差 2 pt（随画布缩放），局部 runs/text_styles 也参与比较；
-副标题不可通过局部覆盖降低角色。默认使用 32 / 26 / 20 pt，副标题适度加粗；无副标题时无需创建对象。
+同页主标题、副标题、正文/标签/节点之间至少各差 2 pt（随画布缩放），局部 runs/text_styles 也参与比较；分区标题可独立通过字重建立层级。
+support 必须用 parent_id 关联同页主标签，字号至少小1pt，局部覆盖同样检查。副标题不可通过局部覆盖降低角色。具体字号依阅读规范，无副标题时无需创建对象。
 background_color 为文字实际背景，未写则继承 slide.background（未写页面背景时默认白色）。深底白字
 或色块上的字必须显式声明该局部背景；照片/渐变按最不利位置检查。文字 opacity 只能是 1。
 表格声明 header_color/header_fill/body_color/body_fill/alternate_fill；每格继承的 font_size_pt、
@@ -122,6 +118,16 @@ bold 也要写在表格元素上。图表默认文字写 color/font_size_pt/bold
 {"visual":{"strategy":"primary-image","primary_asset_id":"A001","relationship":"呈现本页研究型病房与数据采集关系"}}
 ```
 
-主图素材使用 purpose=primary，kind 使用 scene/illustration/architecture 等语义类型；装饰素材 purpose=decorative。
+兼容字段：主图purpose=primary，kind使用scene/illustration/architecture等语义类型；装饰purpose=decorative。v3另以usage_role区分真实性、示意、装饰与素材框。
 原生主图声明 element_ids（实际 table/chart/connector 或 purpose=diagram 的 shape）及 reason。
 图像可见主体尺寸、语义与风格仍须看最终渲染，声明本身不代表验收。
+
+## 阅读安全区与模块边距
+
+v3每页声明composition，从本页文字容量与模块设计确定阅读安全区和内边距，例如：
+
+```json
+{"composition":{"safe_area":[32,16,1216,688],"regions":[{"id":"system-13","box":[190,296,170,180],"padding_px":14}]}}
+```
+
+文字、表格和图表须在阅读安全区内；背景与有意出血装饰不受此内容边距约束。region_id 关联区域，检查该对象不侵入其 padding_px；容器本身不关联自己的内边距。模块层级与阅读路径仍由视觉核对，不能只保证文字框没有重叠。

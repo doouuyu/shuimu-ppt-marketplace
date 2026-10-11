@@ -106,7 +106,7 @@ def check_style(plan, base):
     return errors
 
 
-def check_delivery(plan, base, require_assets):
+def check_delivery(plan, base, require_assets, asset_scope=None):
     errors = check_style(plan, base)
     generated = set()
     reusable_visuals = set()
@@ -117,7 +117,11 @@ def check_delivery(plan, base, require_assets):
                 errors.append(f'{asset.get("id")}: 风格素材 bundle_key 未登记')
             else:
                 path = base / asset.get('path', '')
-                if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != entry['sha256']:
+                if asset_scope is not None and asset.get('id') not in asset_scope:
+                    # The complete design still declares the registered source; this
+                    # preview only needs files actually referenced by its page.
+                    reusable_visuals.add(asset.get('id'))
+                elif not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != entry['sha256']:
                     errors.append(f'{asset.get("id")}: 复用素材与风格包原图不一致')
                 else:
                     reusable_visuals.add(asset.get('id'))
@@ -127,7 +131,7 @@ def check_delivery(plan, base, require_assets):
         generated.add(aid)
         if not asset.get('prompt') or asset.get('status') not in ('planned', 'generated', 'accepted'):
             errors.append(f'{aid}: 生成素材必须记录 prompt 与 status')
-        if require_assets:
+        if require_assets and (asset_scope is None or aid in asset_scope):
             if asset.get('status') != 'accepted':
                 errors.append(f'{aid}: 素材尚未验收，不能进入组装')
             if not all(number(asset.get(k)) and asset[k] > 0 for k in ('width_px', 'height_px')):
@@ -143,7 +147,7 @@ def check_delivery(plan, base, require_assets):
     for slide in plan.get('slides', []):
         images = [e for e in slide.get('elements', []) if e.get('type') == 'image']
         used.update(e.get('asset_id') for e in images)
-        if slide.get('role') == 'content':
+        if slide.get('role') == 'content' and plan.get('design_contract_version') != 3:
             visual = slide.get('visual', {})
             strategy = visual.get('strategy')
             if strategy == 'primary-image':
@@ -185,10 +189,12 @@ def check_delivery(plan, base, require_assets):
                     errors.append(f'{eid}: shape 必须声明用途，不能把程序图形当装饰素材')
                 if purpose == 'template' and not slide.get('template_source'):
                     errors.append(f'{eid}: 声称继承模板对象却没有 template_source')
-    if not ((generated | reusable_visuals) & used):
+    if plan.get('design_contract_version') != 3 and not ((generated | reusable_visuals) & used):
         errors.append('图文混排须实际使用生成素材或已验收的风格素材，Logo不计入')
-    if plan.get('design_contract_version') == 2:
+    if plan.get('design_contract_version') in (2, 3):
         errors.extend(check_design_contract(plan))
+    if plan.get('design_contract_version') == 3:
+        errors.extend(check_visual_design(plan))
     return errors
 
 
@@ -206,7 +212,7 @@ def check_design_contract(plan):
     for slide in slides:
         sid = slide.get('id')
         elements = {e.get('id'): e for e in slide.get('elements', [])}
-        if slide.get('role') == 'content':
+        if slide.get('role') == 'content' and plan.get('design_contract_version') == 2:
             override = style.get('decoration_override', {})
             if style.get('decoration_mode') == 'none':
                 if override.get('source') != 'user_message' or not override.get('quote'):
@@ -240,6 +246,168 @@ def check_design_contract(plan):
 
 def number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def check_visual_design(plan):
+    """V3 records actual visual decisions; it does not assign an aesthetic score."""
+    errors = []
+    methods = {'native', 'image', 'hybrid'}
+    assets = {a.get('id'): a for a in plan.get('assets', [])}
+
+    def wording(value):
+        return isinstance(value, str) and bool(value.strip())
+
+    def ids(value):
+        return (isinstance(value, list) and all(isinstance(x, str) and x for x in value)
+                and len(value) == len(set(value)))
+
+    def unit_box(value):
+        return (isinstance(value, list) and len(value) == 4 and all(number(x) for x in value)
+                and min(value[:2]) >= 0 and min(value[2:]) > 0
+                and value[0] + value[2] <= 1 and value[1] + value[3] <= 1)
+
+    def contained(box, area):
+        return (box[0] >= area[0] - .1 and box[1] >= area[1] - .1
+                and box[0] + box[2] <= area[0] + area[2] + .1
+                and box[1] + box[3] <= area[1] + area[3] + .1)
+
+    for aid, asset in assets.items():
+        role = asset.get('usage_role')
+        if asset.get('source') not in ('generated', 'user', 'external', 'template', 'style'):
+            errors.append(f'{aid}: v3素材 source 无效')
+        if role not in ('evidence', 'illustration', 'decoration', 'container'):
+            errors.append(f'{aid}: v3素材须声明 usage_role 为 evidence/illustration/decoration/container')
+        if role == 'evidence':
+            if asset.get('source') == 'generated':
+                errors.append(f'{aid}: 真实记录素材不能使用生成图，限制仅作用于本素材用途')
+            if not any(wording(asset.get(k)) for k in ('source_url', 'source_path')):
+                errors.append(f'{aid}: 真实记录素材须有可追溯来源')
+        if role == 'container':
+            regions = asset.get('text_safe_regions')
+            if not isinstance(regions, list) or not regions or not all(unit_box(r) for r in regions):
+                errors.append(f'{aid}: 素材框须提供归一化 text_safe_regions')
+            actual = asset.get('actual_text_safe_regions')
+            if actual is not None and (not isinstance(actual, list) or not actual or not all(unit_box(r) for r in actual)):
+                errors.append(f'{aid}: 实际文字安全区 actual_text_safe_regions 无效')
+            if not number(asset.get('aspect_ratio')) or asset['aspect_ratio'] <= 0:
+                errors.append(f'{aid}: 素材框须声明计划 aspect_ratio')
+        if not wording(asset.get('crop_policy')):
+            errors.append(f'{aid}: v3素材须说明裁切/伸缩范围 crop_policy')
+
+    for slide in plan.get('slides', []):
+        sid = slide.get('id')
+        elements = {e.get('id'): e for e in slide.get('elements', [])}
+        design = slide.get('visual_design')
+        if not isinstance(design, dict):
+            errors.append(f'{sid}: v3须先记录 visual_design，再分解组装对象')
+            continue
+        modules = design.get('modules')
+        if not isinstance(modules, list) or not modules:
+            errors.append(f'{sid}: visual_design.modules 必须为非空模块列表')
+            continue
+        composition = slide.get('composition')
+        if not isinstance(composition, dict):
+            errors.append(f'{sid}: v3须声明阅读安全区及文字区域 composition')
+            composition = {}
+        region_values = composition.get('regions', [])
+        regions = {r.get('id'): r for r in region_values if isinstance(r, dict)} if isinstance(region_values, list) else {}
+        claimed = set()
+
+        def bind(owner, item, background=False):
+            if not isinstance(item, dict):
+                errors.append(f'{sid}/{owner}: 设计记录必须为对象')
+                return []
+            for key in ('appearance', 'decision_reason'):
+                if not wording(item.get(key)):
+                    errors.append(f'{sid}/{owner}: 缺少 {key}，不能用对象坐标代替设计')
+            method, refs = item.get('render_method'), item.get('element_ids')
+            if method not in methods or not ids(refs) or (not background and not refs):
+                errors.append(f'{sid}/{owner}: 制作方式或实际 element_ids 无效')
+                return []
+            if any(eid not in elements for eid in refs):
+                errors.append(f'{sid}/{owner}: 引用了不存在的元素')
+            if claimed.intersection(refs):
+                errors.append(f'{sid}/{owner}: 同一元素不能被多个模块重复认领')
+            claimed.update(refs)
+            owned = [elements[eid] for eid in refs if eid in elements]
+            if background and any(e.get('type') not in ('image', 'shape') for e in owned):
+                errors.append(f'{sid}: 背景只能认领底图和图形，内容文字/数据/连接须进入内容模块')
+            has_image = any(e.get('type') == 'image' for e in owned)
+            has_native = any(e.get('type') != 'image' for e in owned)
+            if ((method == 'native' and has_image)
+                    or (method == 'image' and (not has_image or has_native))
+                    or (method == 'hybrid' and not (has_image and has_native))):
+                errors.append(f'{sid}/{owner}: 实际对象与 render_method 不一致')
+            if background and not owned and method == 'native' and not wording(slide.get('background')):
+                errors.append(f'{sid}: 原生空背景须指定页面背景色')
+            return owned
+
+        bind('background', design.get('background'), background=True)
+        module_ids = []
+        for module in modules:
+            if not isinstance(module, dict) or not wording(module.get('id')):
+                errors.append(f'{sid}: 模块须有唯一 id')
+                continue
+            mid = module['id']
+            if mid in module_ids:
+                errors.append(f'{sid}: 模块 id 重复 {mid}')
+            module_ids.append(mid)
+            if not wording(module.get('purpose')):
+                errors.append(f'{sid}/{mid}: 缺少模块信息任务 purpose')
+            owned = bind(mid, module)
+            text_objects = [e for e in owned if e.get('type') in ('text', 'table', 'chart')]
+            region_ids = module.get('text_region_ids')
+            if not ids(region_ids) or any(r not in regions for r in region_ids):
+                errors.append(f'{sid}/{mid}: text_region_ids 须关联本页实际文字区域')
+                region_ids = []
+            for element in text_objects:
+                if element.get('region_id') not in region_ids:
+                    errors.append(f'{element.get("id")}: 模块文字须绑定已设计的文字区域')
+            # Generated container geometry is calibrated after generation, never
+            # stretched/cropped blindly to fit text. Other images may still crop.
+            container_areas = []
+            for image in (e for e in owned if e.get('type') == 'image'):
+                asset = assets.get(image.get('asset_id'), {})
+                if asset.get('usage_role') != 'container':
+                    continue
+                if not text_objects:
+                    errors.append(f'{image.get("id")}: 素材框须与所承载的原生文字处于同一模块')
+                if image.get('fit') != 'contain' or image.get('crop'):
+                    errors.append(f'{image.get("id")}: 素材框须 contain 完整放置，不裁切文字安全区')
+                    continue
+                box = image.get('box')
+                safe = asset.get('actual_text_safe_regions', asset.get('text_safe_regions', []))
+                ratio = asset.get('aspect_ratio')
+                if number(asset.get('width_px')) and number(asset.get('height_px')) and asset['height_px'] > 0:
+                    ratio = asset['width_px'] / asset['height_px']
+                if not (isinstance(box, list) and len(box) == 4 and all(number(x) for x in box)
+                        and min(box[2:]) > 0 and number(ratio) and ratio > 0
+                        and isinstance(safe, list) and safe and all(unit_box(r) for r in safe)):
+                    continue
+                x, y, w, h = box
+                iw, ih = min(w, h * ratio), min(h, w / ratio)
+                x += (w - iw) / 2
+                y += (h - ih) / 2
+                areas = [[x + r[0]*iw, y + r[1]*ih, r[2]*iw, r[3]*ih] for r in safe]
+                container_areas.extend(areas)
+                if not any(isinstance(e.get('box'), list) and len(e['box']) == 4
+                           and all(number(v) for v in e['box'])
+                           and any(contained(e['box'], area) for area in areas) for e in text_objects):
+                    errors.append(f'{image.get("id")}: 素材框未承载模块文字，请核对用途或文字区域')
+            if container_areas:
+                for element in text_objects:
+                    eb = element.get('box')
+                    if isinstance(eb, list) and len(eb) == 4 and all(number(v) for v in eb):
+                        if not any(contained(eb, area) for area in container_areas):
+                            errors.append(f'{element.get("id")}: 文字未落入素材框实际安全区，须校准布局或重做素材')
+        order = design.get('reading_order')
+        if (not ids(order) or not order or any(mid not in module_ids for mid in order)
+                or design.get('focus') not in order):
+            errors.append(f'{sid}: focus 与 reading_order 须指向实际内容模块')
+        unclaimed = {eid for eid, e in elements.items() if e.get('purpose') != 'template'} - claimed
+        if unclaimed:
+            errors.append(f'{sid}: 元素未落实到背景或模块设计：{", ".join(sorted(unclaimed))}')
+    return errors
 
 
 def check_style_authority(plan):
@@ -292,8 +460,12 @@ def check_projection(plan):
     """Check the selected reading context; ordinary screen reading is the default."""
     profile = plan.get('readability_profile', 'screen')
     profiles = {
-        'screen': {'cover_title': 36, 'title': 28, 'subtitle': 24, 'body': 18, 'label': 18, 'footnote': 14, 'metric': 24},
-        'projection': {'cover_title': 42, 'title': 34, 'subtitle': 28, 'body': 22, 'label': 20, 'footnote': 18, 'metric': 28},
+        'screen': {'cover_title': 36, 'title': 28, 'subtitle': 20, 'section_title': 18,
+                   'body': 18, 'label': 16, 'node_title': 14, 'support': 13,
+                   'footnote': 12, 'metric': 24},
+        'projection': {'cover_title': 42, 'title': 34, 'subtitle': 28, 'section_title': 24,
+                       'body': 22, 'label': 20, 'node_title': 20, 'support': 18,
+                       'footnote': 18, 'metric': 28},
     }
     if not isinstance(profile, str) or profile not in profiles:
         return ['readability_profile 必须为 screen 或 projection']
@@ -302,11 +474,17 @@ def check_projection(plan):
     errors = []
     for slide in plan.get('slides', []):
         tiers = {role: [] for role in floors}
+        by_id = {e.get('id'): e for e in slide.get('elements', [])}
         for element in slide.get('elements', []):
             kind, eid = element.get('type'), element.get('id', '')
             if kind not in ('text', 'table', 'chart'):
                 continue
             default_role = text_role(element, slide)
+            if default_role == 'support':
+                parent = by_id.get(element.get('parent_id'), {})
+                if (not parent or parent is element or parent.get('type') != 'text'
+                        or text_role(parent, slide) in ('support', 'footnote')):
+                    errors.append(f'{eid}: 辅助说明须以 parent_id 关联同页的主标签或标题')
             if default_role == 'metric' and (kind != 'text' or not re.search(r'\d', element.get('text', '')) or len(element.get('text', '')) > 28):
                 errors.append(f'{eid}: metric 仅用于简短关键数字，不能用于普通正文绕过层级检查')
             if default_role == 'subtitle' and element.get('text_role', 'subtitle') != 'subtitle':
@@ -329,6 +507,12 @@ def check_projection(plan):
                 if default_role == 'subtitle' and role != 'subtitle':
                     errors.append(f'{eid}: 副标题局部样式不能改变 subtitle 角色')
                     role = 'subtitle'
+                if role == 'support' and default_role != 'support':
+                    errors.append(f'{eid}: 局部样式不能把主文字改称辅助说明以降低字号')
+                if default_role == 'support' and number(size):
+                    parent = by_id.get(element.get('parent_id'), {})
+                    if number(parent.get('font_size_pt')) and size > parent['font_size_pt'] - scale:
+                        errors.append(f'{eid}: 辅助说明须比对应主标签至少小 {scale:g} pt，含局部字号')
                 if role in tiers and number(size):
                     tiers[role].append(size)
                 if role not in floors:
@@ -353,7 +537,7 @@ def check_projection(plan):
                     errors.append(f'{eid}: 文字与实际背景对比不足 {contrast_floor:g}:1')
         if tiers['subtitle']:
             titles = tiers['title'] + tiers['cover_title']
-            body = tiers['body'] + tiers['label']
+            body = tiers['body'] + tiers['label'] + tiers['node_title']
             gap = 2 * scale
             if not titles:
                 errors.append(f'{slide.get("id")}: 有副标题时须声明同页主标题以核对字号层级')
@@ -361,6 +545,59 @@ def check_projection(plan):
                 errors.append(f'{slide.get("id")}: 副标题须比主标题至少小 {gap:g} pt')
             if body and min(tiers['subtitle']) < max(body) + gap:
                 errors.append(f'{slide.get("id")}: 副标题须比正文/标签至少大 {gap:g} pt')
+    return errors
+
+
+def check_composition(plan):
+    """Audit declared content margins and module insets, not aesthetic quality."""
+    errors = []
+
+    def valid_box(box):
+        return (isinstance(box, list) and len(box) == 4
+                and all(number(x) for x in box) and min(box[2:]) > 0)
+
+    def inside(box, frame):
+        return (box[0] >= frame[0] - .01 and box[1] >= frame[1] - .01
+                and box[0] + box[2] <= frame[0] + frame[2] + .01
+                and box[1] + box[3] <= frame[1] + frame[3] + .01)
+
+    canvas = plan['canvas']
+    for slide in plan.get('slides', []):
+        spec = slide.get('composition')
+        if spec is None:
+            continue
+        if not isinstance(spec, dict):
+            errors.append(f'{slide.get("id")}: composition 必须为对象')
+            continue
+        safe = spec.get('safe_area')
+        if not valid_box(safe) or not inside(safe, [0, 0, canvas['width'], canvas['height']]):
+            errors.append(f'{slide.get("id")}: composition.safe_area 必须在画布内')
+            continue
+        regions = {}
+        declared = spec.get('regions', [])
+        if not isinstance(declared, list):
+            errors.append(f'{slide.get("id")}: composition.regions 必须为列表')
+            continue
+        for region in declared:
+            if not isinstance(region, dict):
+                errors.append(f'{slide.get("id")}: 分区必须为对象')
+                continue
+            box, inset, rid = region.get('box'), region.get('padding_px'), region.get('id')
+            if (not rid or rid in regions or not valid_box(box) or not inside(box, safe)
+                    or not number(inset) or inset < 0 or min(box[2:]) <= inset * 2):
+                errors.append(f'{slide.get("id")}: 无效或重复的分区及内边距 {rid}')
+                continue
+            regions[rid] = [box[0] + inset, box[1] + inset, box[2] - inset * 2, box[3] - inset * 2]
+        for element in slide.get('elements', []):
+            box = element.get('box')
+            if not valid_box(box):
+                continue
+            eid = element.get('id')
+            if element.get('type') in ('text', 'table', 'chart') and not inside(box, safe):
+                errors.append(f'{eid}: 内容越过整页阅读安全区')
+            region = element.get('region_id')
+            if region and (region not in regions or not inside(box, regions[region])):
+                errors.append(f'{eid}: 内容侵入分区内边距或引用未知分区 {region}')
     return errors
 
 
@@ -373,12 +610,23 @@ def retained_template_bleed(element, slide, width, height):
     return w > 0 and h > 0 and x < width and y < height and x + w > 0 and y + h > 0
 
 
-def validate_plan(plan, base, require_assets=False):
+def validate_plan(plan, base, require_assets=False, dependency_page=None):
     errors = []
     if not isinstance(plan, dict):
         return ['清单必须是 JSON object']
     if plan.get('workflow') != 'editable-ppt':
         errors.append('workflow 必须为 editable-ppt')
+    version = plan.get('design_contract_version')
+    if version is not None and (type(version) is not int or version not in (2, 3)):
+        errors.append('design_contract_version 仅支持旧版2或新版3')
+    asset_scope = None
+    if dependency_page is not None:
+        selected = next((s for s in plan.get('slides', []) if s.get('id') == dependency_page), None)
+        if selected is None:
+            return [f'单页预览找不到页面：{dependency_page}']
+        if not require_assets:
+            return ['dependency_page 仅用于启用 require_assets 的单页预览']
+        asset_scope = {e.get('asset_id') for e in selected.get('elements', []) if e.get('type') == 'image'}
     canvas = plan.get('canvas', {})
     width, height = canvas.get('width'), canvas.get('height')
     if canvas.get('unit') != 'px' or not all(number(v) and v > 0 for v in (width, height)):
@@ -394,7 +642,7 @@ def validate_plan(plan, base, require_assets=False):
                 errors.append(f'{aid}: 缺少 {field}')
         if asset.get('source') == 'generated' and asset.get('text_free') is not True:
             errors.append(f'{aid}: 生成素材必须 text_free=true，标签应作为原生文字')
-        if require_assets and not (base / asset.get('path', '')).is_file():
+        if require_assets and (asset_scope is None or aid in asset_scope) and not (base / asset.get('path', '')).is_file():
             errors.append(f'{aid}: 素材文件不存在：{asset.get("path")}')
     slides = plan.get('slides')
     if not isinstance(slides, list) or not slides:
@@ -473,8 +721,9 @@ def validate_plan(plan, base, require_assets=False):
             if e.get('type') == 'connector' and any(e.get(k) not in local_ids for k in ('from', 'to')):
                 errors.append(f'{e.get("id")}: 连接端点必须存在于同页')
     errors.extend(check_style_authority(plan))
-    errors.extend(check_delivery(plan, base, require_assets))
+    errors.extend(check_delivery(plan, base, require_assets, asset_scope))
     errors.extend(check_projection(plan))
+    errors.extend(check_composition(plan))
     return errors
 
 
@@ -586,11 +835,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('plan', type=Path)
     parser.add_argument('--require-assets', action='store_true')
+    parser.add_argument('--page', help='只检查该页图片文件就绪状态；仍校验完整设计与快照，不作为最终验收')
     parser.add_argument('--pptx', type=Path)
     args = parser.parse_args()
+    if args.page and (not args.require_assets or args.pptx):
+        parser.error('--page 必须与 --require-assets 一起使用，不能与最终 --pptx 审查合用')
     try:
         plan = json.loads(args.plan.read_text(encoding='utf-8'))
-        errors = validate_plan(plan, args.plan.parent, args.require_assets)
+        errors = validate_plan(plan, args.plan.parent, args.require_assets, dependency_page=args.page)
         if args.require_assets or args.pptx:
             from design_snapshot import verify_snapshot
             errors.extend(verify_snapshot(args.plan))
@@ -599,7 +851,11 @@ def main():
     except (OSError, ValueError, KeyError, TypeError, AttributeError, zipfile.BadZipFile, ET.ParseError) as exc:
         print(f'无法检查 {args.plan}: {exc}')
         return 1
-    print('\n'.join(errors) if errors else '设计/原生对象检查通过；仍需逐页渲染验证排版、素材和数据。')
+    success = (f'{args.page} 单页依赖与完整设计检查通过；最终交付仍须检查全套素材及 PPTX。'
+               if args.page else '设计/原生对象检查通过；仍需逐页渲染验证排版、素材和数据。')
+    print('\n'.join(errors) if errors else success)
+    if not errors and plan.get('design_contract_version') != 3:
+        print('兼容检查：此为旧版设计，未执行 v3 视觉设计决策检查；不能视为新版验收。')
     return int(bool(errors))
 
 

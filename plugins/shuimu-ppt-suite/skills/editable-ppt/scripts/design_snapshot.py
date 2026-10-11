@@ -8,7 +8,8 @@ from pathlib import Path
 import re
 
 ASSET_RESULT_FIELDS = {'status', 'width_px', 'height_px', 'generated_path',
-                       'generation_record', 'actual_sha256', 'reviewed_at', 'accepted_at'}
+                       'generation_record', 'actual_sha256', 'reviewed_at', 'accepted_at',
+                       'actual_text_safe_regions'}
 
 
 def digest(data):
@@ -42,6 +43,13 @@ def document_errors(plan, document):
         if asset.get('source') == 'generated':
             if asset.get('id') not in document or normalize(asset.get('prompt', '')) not in normalized:
                 errors.append(f'{asset.get("id")}: 完整生成提示词须先写入设计文档')
+    if plan.get('design_contract_version') == 3:
+        for slide in plan.get('slides', []):
+            visual = slide.get('visual_design', {})
+            for module in [visual.get('background', {}), *visual.get('modules', [])]:
+                for key in ('purpose', 'appearance', 'decision_reason'):
+                    if module.get(key) and normalize(module[key]) not in normalized:
+                        errors.append(f'{slide["id"]}: {key} 设计决策未写入设计文档')
     return errors
 
 
@@ -66,15 +74,21 @@ def freeze(plan_path, design_path, revise_reason=None):
     plan_path = plan_path.resolve()
     design_path = design_path.resolve()
     plan = json.loads(plan_path.read_text(encoding='utf-8'))
-    if plan.get('design_contract_version') != 2:
-        raise ValueError('新任务必须使用 design_contract_version=2 并先确定页范围、装饰与封面文字槽')
-    errors = validate_plan(plan, plan_path.parent)
-    document = design_path.read_text(encoding='utf-8')
-    errors.extend(document_errors(plan, document))
-    if errors:
-        raise ValueError('\n'.join(errors))
     output = snapshot_path(plan_path)
     previous = json.loads(output.read_text(encoding='utf-8')) if output.exists() else None
+    version = plan.get('design_contract_version')
+    if type(version) is not int or version not in (2, 3):
+        raise ValueError('新任务使用 design_contract_version=3；旧版2只支持已有快照的续作')
+    if version == 2 and not previous:
+        raise ValueError('新任务必须使用 design_contract_version=3 并完成视觉设计决策；不会自动补齐旧稿字段')
+    if previous and previous.get('design_contract_version', 2) == 3 and version == 2:
+        raise ValueError('不能把已冻结的v3设计降级为v2来跳过视觉设计检查')
+    errors = validate_plan(plan, plan_path.parent)
+    document = design_path.read_text(encoding='utf-8')
+    if not errors:
+        errors.extend(document_errors(plan, document))
+    if errors:
+        raise ValueError('\n'.join(errors))
     plan_hash = digest(planned_content(plan))
     document_hash = digest(design_path.read_bytes())
     if previous and plan_hash == previous['plan_sha256'] and document_hash == previous['design_sha256']:
@@ -95,6 +109,7 @@ def freeze(plan_path, design_path, revise_reason=None):
     import os
     record = {
         'schema_version': 1,
+        'design_contract_version': version,
         'revision': previous['revision'] + 1 if previous else 1,
         'created_at': previous['created_at'] if previous else now,
         'updated_at': now,
@@ -120,7 +135,10 @@ def verify_snapshot(plan_path):
         record = json.loads(path.read_text(encoding='utf-8'))
         design = plan_path.parent / record['design_file']
         errors = []
-        if plan.get('design_contract_version') != 2 or record.get('plan_file') != plan_path.name:
+        version = plan.get('design_contract_version')
+        if (type(version) is not int or version not in (2, 3)
+                or record.get('design_contract_version', 2) != version
+                or record.get('plan_file') != plan_path.name):
             errors.append('设计快照与当前计划不匹配')
         if digest(planned_content(plan)) != record['plan_sha256']:
             errors.append('布局/文案/提示词已变更，须先同步设计并记录新版本')
@@ -144,6 +162,8 @@ def main():
                 parser.error('freeze requires --design')
             record = freeze(args.plan, args.design, args.revise)
             print(f'设计已锁定 revision={record["revision"]}；按此文档生成素材和组装')
+            if record.get('design_contract_version', 2) == 2:
+                print('旧版续作：未执行 v3 视觉设计决策检查。')
         else:
             errors = verify_snapshot(args.plan)
             print('\n'.join(errors) if errors else '当前布局与生图前设计快照一致')
