@@ -1,6 +1,6 @@
 {
   "name": "shuimu-ppt-suite",
-  "version": "0.2.2+codex.20261009",
+  "version": "0.2.3+codex.20261015",
   "description": "三种PPT流程与独立风格资源；按内容设计背景、容器和图文关系，再选择原生或Image制作",
   "author": {
     "name": "doouu"
