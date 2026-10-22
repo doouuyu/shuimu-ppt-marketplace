@@ -10,11 +10,11 @@
 - background：render_method（native/image/hybrid）、appearance、decision_reason、element_ids；背景只认领图片和图形；原生页面底色可使用空element_ids并设置slide.background
 - modules：每项id、purpose、appearance、render_method、decision_reason、element_ids、text_region_ids
 
-appearance应说明轮廓、边缘、材质/明暗、留白及融合，decision_reason说明为何该方案适合文字量、精确性、修改需求与视觉复杂度。坐标不能代替这些判断。
+appearance应说明本页有意义的分组、主次与图文融合，轮廓、材质等只记录影响画面的决定；decision_reason说明为何该方案适合内容、文字量与编辑需求。不得用统一泛化描述或坐标表替代实际设计判断。
 所有非模板保护元素须归入背景或一个模块，同一元素不重复归属。原生模块不含图片，image模块只含图片，hybrid模块同时含图片与原生对象。模块中的文字、表格和图表用region_id关联composition.regions，其区域ID列入模块text_region_ids。
 
 素材usage_role为evidence/illustration/decoration/container。真实记录evidence不得source=generated，须记录source_url或source_path；其他用途可生成。每项素材记录crop_policy，说明裁切/伸缩范围。
-container额外记录aspect_ratio（计划宽高比）和text_safe_regions（一个或多个归一化[x,y,w,h]，范围0到1）。素材框与承载的原生文字归属同一hybrid模块。图像到位后可记录actual_text_safe_regions，表示人工查看得到的实际安全区，不改写原提示词。框体完整contain放置，不裁切；文字须落在其实际安全区。校验按实际图片尺寸计算contain后的留白偏移，生成比例变化后须校准布局，不拉伸硬套。
+container额外记录aspect_ratio（计划宽高比）和text_safe_regions（一个或多个归一化[x,y,w,h]，范围0到1）。素材框与承载的原生文字归属同一hybrid模块。整页联合视觉层同样适用：可包含多个实际承载区，由text_region_ids列出，不能仅将整幅画布视为文字安全区；模块的用途说明各分区对应关系，不要求把共享图层重复归属多个模块。图像到位后可记录actual_text_safe_regions，表示人工查看得到的实际安全区，不改写原提示词。框体完整contain放置，不裁切；文字须落在其实际安全区。校验按实际图片尺寸计算contain后的留白偏移，生成比例变化后须校准布局，不拉伸硬套。
 
 构图记录与准确文案、图片提示词写入同一设计文档；与layout.json一起冻结。生成结果更新状态、尺寸和来源；改变设计或几何须先同步文档，再freeze --revise。
 背景可用原生、图片或混合，不以“一张全页生成背景”作为混排通行条件；用户明确指定的模板背景与品牌对象继续保留。
@@ -97,7 +97,7 @@ bold 也要写在表格元素上。图表默认文字写 color/font_size_pt/bold
 
 - image：`asset_id`、`fit: contain/cover`；可加 `crop`/`focus`，在排版文档解释归一化单位。
 - shape：`purpose`（template/background/separator/diagram/content-panel）、`geometry`、`fill`、
-  `stroke`、`stroke_width_px`、`corner_radius_px`；文本另建 text 元素。内容容器的形状遵循模板与风格；优先开放排版，方正色块可使用，不统一要求圆角。
+  `stroke`、`stroke_width_px`、`corner_radius_px`；文本另建 text 元素。内容容器按本页分组需要、模板与风格选择，不统一要求开放、封闭或圆角。
 - connector：`from/to` 为同页对象 ID，补充连接边、`line_color/line_width_px/end_arrow`。
   box 是连接线外包框（水平或垂直线也保留至少 1 px 的审计包络）。
 - table：`rows` 二维数组；`column_widths/row_heights` 均为 px；`font_family/font_size_pt`；

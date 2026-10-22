@@ -1,15 +1,15 @@
 {
   "name": "shuimu-ppt-suite",
-  "version": "0.2.3+codex.20261015",
-  "description": "三种PPT流程与独立风格资源；按内容设计背景、容器和图文关系，再选择原生或Image制作",
+  "version": "0.2.4-rc.1+codex.20261020",
+  "description": "三种PPT流程与独立风格资源；图文混排按整页设计直接制作无字视觉层和原生内容",
   "author": {
     "name": "doouu"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "水木 PPT 套件 · Shuimu PPT Suite",
-    "shortDescription": "内容驱动的图文设计，原生与Image按需分工，保留编辑能力",
-    "longDescription": "纯图片、图文混排、纯原生模板三种流程，默认清华长庚绿。图文混排先设计模块外观、文字容量、背景与图文融合，再选择原生、Image或混合制作。支持生成容器与点缀，真实照片限制按素材用途执行，新任务采用v3设计与编辑性检查。",
+    "shortDescription": "整页构图与原生编辑结合，直接生成可用视觉层，减少重复制作",
+    "longDescription": "纯图片、图文混排、纯原生模板三种流程，默认清华长庚绿。图文混排将完整文案与整页画面意图用于无字视觉层生成，再校准原生文字、数据与精确关系；不默认先做全套纯图片稿。继续使用v3设计检查与实际渲染、编辑回读。",
     "developerName": "doouu",
     "category": "Productivity",
     "capabilities": [
@@ -17,6 +17,6 @@
       "image-generation",
       "template-routing"
     ],
-    "defaultPrompt": "使用 $editable-ppt，先按我的页范围完成设计文档，再使用清华长庚绿原生封面、标题栏和统一科技背景制作图文混排PPT，保留检查"
+    "defaultPrompt": "使用 $editable-ppt，按我的内容与风格设计整页，直接制作无字视觉层和原生文字数据，完成图文校准与检查"
   }
 }

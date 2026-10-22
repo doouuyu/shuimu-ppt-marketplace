@@ -15,4 +15,4 @@
 保留真实源对象及角色映射，不把仅图片参考当原生模板。用户指定其他文件时用custom及真实路径记录。
 封面用 cover_slots 映射 hero 与 title 原生文字对象；源页不是只有图片和Logo，主题大字也必须有对应填充内容。
 
-新设计使用 design_contract_version=3，正式素材生成前锁定文档和布局；可选完整视觉稿及后续位置校准按 [design-documents.md](design-documents.md) 执行。图片参考风格说明 reference_anchor，复杂素材按页面构图生成；图中可编辑文字在同一构图中原生排布。
+新设计使用 design_contract_version=3，正式素材生成前锁定文档和布局；直接无字视觉层、按需试稿及后续校准按 [design-documents.md](design-documents.md) 执行。图片参考风格说明 reference_anchor，复杂素材按页面构图生成；图中可编辑文字在同一构图中原生排布。

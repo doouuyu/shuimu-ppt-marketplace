@@ -1,4 +1,4 @@
 interface:
   display_name: "图文混排 PPT"
-  short_description: "按内容设计背景与容器，选择原生、Image或混合制作，保留文字编辑能力"
-  default_prompt: "使用 $editable-ppt，先根据内容设计整页背景、容器和图文关系，再选择原生、Image或混合制作；文字数据可编辑，默认清华长庚绿"
+  short_description: "整页设计后直接制作无字视觉层与原生内容，保留文字数据编辑能力"
+  default_prompt: "使用 $editable-ppt，按完整文案设计整页，直接制作无字视觉层并叠加原生文字与数据；默认清华长庚绿"
